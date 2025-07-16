@@ -14,27 +14,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(uuid()) // Use Clerk user ID
-  email     String   @unique
-  name      String?
-  role      Role     @default(EMPLOYEE)
-  responses Response[]
-  assignments Assignment[]
-}
-
-enum Role {
-  ADMIN
-  EMPLOYEE
-}
-
 model Form {
   id          String      @id @default(uuid())
   title       String
   description String?
   questions   Json        // Array of questions (customizable)
   createdAt   DateTime    @default(now())
-  createdBy   String      // Admin User ID
+  createdBy   String      // Admin User ID (Clerk)
   assignments Assignment[]
 }
 
@@ -42,8 +28,7 @@ model Assignment {
   id         String      @id @default(uuid())
   form       Form        @relation(fields: [formId], references: [id])
   formId     String
-  employee   User        @relation(fields: [employeeId], references: [id])
-  employeeId String
+  employeeId String      // Clerk User ID
   responses  Response[]
   summary    Summary?
   assignedAt DateTime    @default(now())
@@ -53,8 +38,7 @@ model Response {
   id           String      @id @default(uuid())
   assignment   Assignment  @relation(fields: [assignmentId], references: [id])
   assignmentId String
-  responder    User        @relation(fields: [responderId], references: [id])
-  responderId  String      // The user who submitted this response (self or peer)
+  responderId  String      // Clerk User ID (self or peer)
   answers      Json        // Answers to the form questions
   createdAt    DateTime    @default(now())
   isPeer       Boolean     // True if this is a peer feedback, false if self

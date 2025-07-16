@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 const questions = [
   "What are this employee’s top strengths?",
@@ -31,13 +32,9 @@ const AppraisalForm = () => {
   const methods = useForm({ defaultValues });
   const { handleSubmit, reset } = methods;
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
 
   const onSubmit = async (data: Record<string, string>) => {
     setLoading(true);
-    setSuccess("");
-    setError("");
     try {
       // Prepare the payload for the API
       const payload = {
@@ -58,10 +55,10 @@ const AppraisalForm = () => {
         const err = await res.json();
         throw new Error(err.error || "Failed to submit form");
       }
-      setSuccess("Form submitted successfully!");
+      toast.success("Form submitted successfully!");
       reset();
     } catch (e: any) {
-      setError(e.message || "Something went wrong");
+      toast.error(e.message || "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -69,7 +66,7 @@ const AppraisalForm = () => {
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 px-10 py-10">
         {questions.map((question, idx) => (
           <FormField
             key={idx}
@@ -93,8 +90,6 @@ const AppraisalForm = () => {
         <Button type="submit" className="w-full mt-4" disabled={loading}>
           {loading ? "Submitting..." : "Submit"}
         </Button>
-        {success && <div className="text-green-600 text-center">{success}</div>}
-        {error && <div className="text-red-600 text-center">{error}</div>}
       </form>
     </FormProvider>
   );

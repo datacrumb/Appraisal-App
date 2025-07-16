@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima"; // fix typo if needed!
 import { z } from "zod";
+import { isAdmin } from "@/lib/isAdmin";
 
 // Zod schema for validation
 const formSchema = z.object({
@@ -22,9 +23,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Fetch user from DB to check role
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || user.role !== "ADMIN") {
+  // Check if user is admin
+  if (!(await isAdmin(userId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
