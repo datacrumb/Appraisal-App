@@ -47,3 +47,15 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json(form, { status: 201 });
 }
+
+
+export async function GET() {
+  try {
+    const forms = await prisma.form.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(forms);
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Failed to fetch forms" }, { status: 500 });
+  }
+}
