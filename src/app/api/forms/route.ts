@@ -23,11 +23,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is admin
-  if (!(await isAdmin(userId))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
   // Parse and validate request body
   const body = await req.json();
   const parsed = formSchema.safeParse(body);
