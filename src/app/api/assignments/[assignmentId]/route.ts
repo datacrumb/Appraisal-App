@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 import { isEmployee } from "@/lib/isEmployee";
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, context: { params: { assignmentId: string } }) {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,10 +14,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const assignments = await prisma.assignment.findMany({
-    where: { employeeId: userId },
+  const { assignmentId } = context.params;
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
     include: { form: true },
-    orderBy: { assignedAt: "desc" },
   });
-  return NextResponse.json(assignments);
+
+  // Only allow the assigned employee to fetch this assignment
+  if (!assignment || assignment.employeeId !== userId) {
+    return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
+  }
+
+  return NextResponse.json(assignment);
 }

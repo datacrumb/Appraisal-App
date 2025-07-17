@@ -1,9 +1,9 @@
-import AppraisalForm from '@/components/reviewer/Form'
+import Assignments from '@/components/reviewer/Assignments'
 import React from 'react'
 
 const page = () => {
   return (
-    <AppraisalForm />
+    <Assignments />
   )
 }
 

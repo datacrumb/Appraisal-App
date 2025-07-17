@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 const Header = () => {
   const { user, isLoaded } = useUser();
   const isAdmin = user?.publicMetadata?.role === "admin";
+  const isEmployee = user?.publicMetadata?.role === "employee";
 
   return (
     <nav className="w-full flex items-center justify-between px-6 py-4 border-b bg-white">
@@ -21,15 +22,26 @@ const Header = () => {
           </Link>
         )}
       </div>
+      <div className="flex items-center gap-6">
+        {isLoaded && isEmployee && (
+          <Link href="/assignments">
+            <Button variant="ghost">Assignments</Button>
+          </Link>
+        )}
+      </div>
       <div>
         {isLoaded && user ? (
-          <SignOutButton>
-            <Button variant="outline">Sign Out</Button>
-          </SignOutButton>
+          <Link href='/sign-in'>
+            <SignOutButton>
+              <Button variant="outline">Sign Out</Button>
+            </SignOutButton>
+          </Link>
         ) : (
-          <SignInButton>
-            <Button>Sign In</Button>
-          </SignInButton>
+          <Link href='/sign-up'>
+            <SignInButton>
+              <Button>Sign In</Button>
+            </SignInButton>
+          </Link>
         )}
       </div>
     </nav>
