@@ -1,7 +1,6 @@
-// src/app/api/forms/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { prisma } from "@/lib/prsima"; // fix typo if needed!
+import { prisma } from "@/lib/prsima";
 import { z } from "zod";
 import { isAdmin } from "@/lib/isAdmin";
 
@@ -45,6 +44,17 @@ export async function POST(req: NextRequest) {
 
 
 export async function GET() {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  
+  // Check if user is admin
+  if (!(await isAdmin(userId))) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
     const forms = await prisma.form.findMany({
       orderBy: { createdAt: "desc" },
