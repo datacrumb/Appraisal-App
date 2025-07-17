@@ -1,4 +1,4 @@
-import Assign from "@/components/Assign";
+import Assign from "@/components/admin/Assign";
 
 export default function AssignPage() {
   return <Assign />;

@@ -25,13 +25,14 @@ model Form {
 }
 
 model Assignment {
-  id         String      @id @default(uuid())
-  form       Form        @relation(fields: [formId], references: [id])
-  formId     String
-  employeeId String      // Clerk User ID
-  responses  Response[]
-  summary    Summary?
-  assignedAt DateTime    @default(now())
+  id            String      @id @default(uuid())
+  form          Form        @relation(fields: [formId], references: [id])
+  formId        String
+  employeeId    String      // Clerk User ID
+  employeeEmail String      // Store email at assignment time
+  responses     Response[]
+  summary       Summary?
+  assignedAt    DateTime    @default(now())
 }
 
 model Response {

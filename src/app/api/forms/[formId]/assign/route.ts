@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 import { z } from "zod";
 import { isAdmin } from "@/lib/isAdmin";
@@ -43,10 +44,19 @@ export async function POST(req: NextRequest, { params }: { params: { formId: str
         where: { formId, employeeId },
       });
       if (existing) return existing;
+      
+      // Fetch user's email from Clerk
+      const user = await (await clerkClient()).users.getUser(employeeId);
+      const email =
+        Array.isArray(user.emailAddresses) && user.emailAddresses.length > 0
+          ? user.emailAddresses[0].emailAddress
+          : "";
+
       return prisma.assignment.create({
         data: {
           formId,
           employeeId,
+          employeeEmail: email,
         },
       });
     })

@@ -1,4 +1,4 @@
-import AppraisalForm from "@/components/Form";
+import AppraisalForm from "@/components/reviewer/Form";
 
 export default function Home() {
   return (

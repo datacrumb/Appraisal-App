@@ -29,7 +29,7 @@ const Assign = () => {
       setFetching(true);
       try {
         const token = await getToken();
-        const res = await fetch("/api/assign/fetch-users", {
+        const res = await fetch("/api/users", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -127,7 +127,7 @@ const Assign = () => {
         ) : (
           <div className="border rounded-md p-2 max-h-64 overflow-y-auto">
             {users.length === 0 && <div>No employees found.</div>}
-            {users.map((u) => (
+            {users?.map((u) => (
               <div key={u.id} className="flex items-center gap-2 py-1">
                 <input
                   type="checkbox"
