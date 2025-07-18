@@ -2,8 +2,16 @@
 
 import React from "react";
 import Link from "next/link";
-import { useUser, SignInButton, SignOutButton } from "@clerk/nextjs";
+import { useUser, SignInButton, SignOutButton, SignedIn, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
+
+const adminNav = [
+  { name: "Assign", href: "/assign" },
+  { name: "Manage Relations", href: "/manage-relations" },
+  { name: "Employees Hierarchy", href: "/hierarchy-graph" },
+  { name: "Responses", href: "/responses" },
+  { name: "Add Employee", href: "/add" },
+]
 
 const Header = () => {
   const { user, isLoaded } = useUser();
@@ -17,9 +25,13 @@ const Header = () => {
           <span className="font-bold text-lg">Appraisal App</span>
         </Link>
         {isLoaded && isAdmin && (
-          <Link href="/assign">
-            <Button variant="ghost">Assign</Button>
-          </Link>
+          <div className="flex items-center gap-4">
+            {adminNav.map((link, index) => (
+              <Link key={index} href={link.href}>
+                <Button variant="link">{link.name}</Button>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
       <div className="flex items-center gap-6">
@@ -29,7 +41,7 @@ const Header = () => {
           </Link>
         )}
       </div>
-      <div>
+      <div className="flex items-center gap-4">
         {isLoaded && user ? (
           <Link href='/sign-in'>
             <SignOutButton>
@@ -43,6 +55,9 @@ const Header = () => {
             </SignInButton>
           </Link>
         )}
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
       </div>
     </nav>
   );

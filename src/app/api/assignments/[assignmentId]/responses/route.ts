@@ -8,13 +8,13 @@ const responseSchema = z.object({
   answers: z.any(), // Accept any structure for answers
 });
 
-export async function POST(req: NextRequest, context: { params: { assignmentId: string } }) {
+export async function POST(req: NextRequest, context: { params: Promise<{ assignmentId: string }> }): Promise<Response> {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { assignmentId } = context.params;
+  const { assignmentId } = await context.params;
   const assignment = await prisma.assignment.findUnique({ where: { id: assignmentId } });
   if (!assignment) {
     return NextResponse.json({ error: "Assignment not found" }, { status: 404 });

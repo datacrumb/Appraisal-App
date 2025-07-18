@@ -3,7 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 import { isAdmin } from "@/lib/isAdmin";
 
-export async function GET(req: NextRequest, context: { params: { responseId: string } }) {
+export async function GET(req: NextRequest, context: { params: Promise<{ responseId: string }> }): Promise<Response> {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, context: { params: { responseId: str
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { responseId } = context.params;
+  const { responseId } = await context.params;
   const response = await prisma.response.findUnique({
     where: { id: responseId },
     include: {

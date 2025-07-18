@@ -54,3 +54,30 @@ model Summary {
   createdAt    DateTime    @default(now())
   approvedAt   DateTime?
 }
+
+model Employee {
+  id        String   @id           // Clerk User ID
+  email     String   @unique
+  // Optionally: name, title, etc.
+  relationsFrom EmployeeRelation[] @relation("FromEmployee")
+  relationsTo   EmployeeRelation[] @relation("ToEmployee")
+}
+
+model EmployeeRelation {
+  id           String   @id @default(uuid())
+  fromId       String
+  toId         String
+  type         RelationType
+
+  from         Employee @relation("FromEmployee", fields: [fromId], references: [id])
+  to           Employee @relation("ToEmployee", fields: [toId], references: [id])
+
+  @@unique([fromId, toId, type])
+}
+
+enum RelationType {
+  MANAGER
+  LEAD
+  COLLEAGUE
+  // Add more as needed
+}

@@ -1,7 +1,7 @@
-import AppraisalForm from "@/components/reviewer/Form";
+
 
 export default function Home() {
   return (
-    <div>Hello</div>
+    <div className="flex items-center justify-center">Hello</div>
   );
 }

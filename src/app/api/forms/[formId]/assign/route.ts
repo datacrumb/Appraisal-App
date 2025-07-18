@@ -9,7 +9,10 @@ const assignSchema = z.object({
   employeeIds: z.array(z.string().min(1)),
 });
 
-export async function POST(req: NextRequest, { params }: { params: { formId: string } }) {
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ formId: string }> }
+): Promise<Response> {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -28,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: { formId: str
   }
 
   const { employeeIds } = parsed.data;
-  const { formId } = params;
+  const { formId } = await context.params;
 
   // Check if form exists
   const form = await prisma.form.findUnique({ where: { id: formId } });
