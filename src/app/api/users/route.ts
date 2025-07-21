@@ -15,10 +15,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const usersResponse = (await clerkClient()).users.getUserList();
-    const users = (await usersResponse).data.map((u: any) => ({
+    const usersResponse = await (await clerkClient()).users.getUserList();
+    const users = usersResponse.data.map((u: any) => ({
       id: u.id,
       email: u.emailAddresses?.[0]?.emailAddress || "",
+      firstName: u.firstName,
+      lastName: u.lastName,
+      imageUrl: u.imageUrl,
     }));
     return NextResponse.json({ users });
   } catch (e: any) {

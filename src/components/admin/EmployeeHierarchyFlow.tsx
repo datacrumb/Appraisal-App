@@ -16,6 +16,9 @@ interface Employee {
   id: string;
   email: string;
   role: string;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string;
 }
 
 interface Relation {
@@ -207,30 +210,33 @@ export default function EmployeeHierarchyFlow() {
             border = "3px solid #6366f1";
             background = "#eef2ff";
           }
+          const fullName = emp.firstName && emp.lastName ? `${emp.firstName} ${emp.lastName}` : emp.email;
+          
           return {
             id: emp.id,
             data: {
               label: (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: "50%",
-                    background: iconBg,
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 700,
-                    fontSize: 18,
-                  }}>{getInitials(emp.email)}</div>
-                  <span>{emp.email}</span>
-                  <span style={{
-                    marginLeft: 8,
-                    fontSize: 12,
-                    color: "#888",
-                    fontWeight: 500,
-                  }}>{role}</span>
+                  {emp.imageUrl ? (
+                    <img src={emp.imageUrl} alt={fullName} style={{ width: 40, height: 40, borderRadius: "50%" }} />
+                  ) : (
+                    <div style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: iconBg,
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 700,
+                      fontSize: 18,
+                    }}>{getInitials(emp.email)}</div>
+                  )}
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    <span style={{ fontWeight: "bold" }}>{fullName}</span>
+                    <span style={{ fontSize: 12, color: "#888" }}>{role}</span>
+                  </div>
                 </div>
               ),
             },
@@ -281,7 +287,6 @@ export default function EmployeeHierarchyFlow() {
               id: rel.id,
               source: rel.fromId,
               target: rel.toId,
-              label: rel.type,
               animated: rel.type === "MANAGER" || rel.type === "LEAD",
               style: {
                 stroke,
