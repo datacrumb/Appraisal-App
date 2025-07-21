@@ -36,25 +36,33 @@ function getInitials(email: string) {
     .slice(0, 2);
 }
 
-const nodeWidth = 180;
-const nodeHeight = 60;
+const nodeWidth = 220;
+const nodeHeight = 70;
 
+// Re-introduce dagre for robust hierarchical layout with groups
 function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
-  const dagreGraph = new dagre.graphlib.Graph();
+  const dagreGraph = new dagre.graphlib.Graph({ compound: true });
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({
     rankdir: direction,
-    ranksep: 160, // vertical gap between layers
-    nodesep: 160, // horizontal gap between nodes
+    ranksep: 120,
+    nodesep: 120,
   });
+
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    if (node.parentNode) {
+      dagreGraph.setParent(node.id, node.parentNode);
+    }
   });
+
   edges.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);
   });
+
   dagre.layout(dagreGraph);
+
   nodes.forEach((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
     node.targetPosition = isHorizontal ? Position.Left : Position.Top;
@@ -64,6 +72,7 @@ function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
       y: nodeWithPosition.y - nodeHeight / 2,
     };
   });
+
   return { nodes, edges };
 }
 
@@ -81,14 +90,12 @@ export default function EmployeeHierarchyFlow() {
       setLoading(true);
       setError(null);
       try {
-        // Fetch adminId from new API route
         const adminRes = await fetch("/api/employees/is-admin");
         if (!adminRes.ok) throw new Error("Failed to fetch admin ID");
         const adminData = await adminRes.json();
         const adminId: string = adminData.adminId;
         if (!adminId) throw new Error("No admin found");
 
-        // Fetch all users
         const usersRes = await fetch("/api/users");
         if (!usersRes.ok) throw new Error("Failed to fetch users");
         const usersData = await usersRes.json();
@@ -96,44 +103,21 @@ export default function EmployeeHierarchyFlow() {
         const employeeMap: Record<string, Employee> = {};
         employees.forEach(emp => { employeeMap[emp.id] = emp; });
 
-        // Fetch relations
         const relRes = await fetch("/api/employees/relations");
         if (!relRes.ok) throw new Error("Failed to fetch relations");
         const relData = await relRes.json();
         const relations: Relation[] = relData.relations || [];
 
-        // Build children map for hierarchy (only MANAGER/LEAD)
-        const childrenMap: Record<string, string[]> = {};
         const roleMap: Record<string, string> = {};
         relations.forEach((rel) => {
           if (rel.type === "MANAGER" || rel.type === "LEAD" || rel.type === "COLLEAGUE") {
-            if (!childrenMap[rel.fromId]) childrenMap[rel.fromId] = [];
-            childrenMap[rel.fromId].push(rel.toId);
-            // Assign role to child if not already set (prefer highest in hierarchy)
             if (!roleMap[rel.toId]) roleMap[rel.toId] = rel.type;
           }
         });
         roleMap[adminId] = "ADMIN";
-        // If there are employees not connected to the tree, lay them out below
         employees.forEach(emp => {
           if (!roleMap[emp.id]) roleMap[emp.id] = "EMPLOYEE";
         });
-
-        // Helper to get role level
-        const roleLevel = (role: string) => {
-          if (role === "ADMIN") return 0;
-          if (role === "MANAGER") return 1;
-          if (role === "LEAD") return 2;
-          if (role === "COLLEAGUE") return 3;
-          return 4; // EMPLOYEE or unknown
-        };
-
-        // Only allow edges between adjacent levels
-        const allowedTransitions: { [key: string]: string[] } = {
-          ADMIN: ["MANAGER"],
-          MANAGER: ["LEAD"],
-          LEAD: ["COLLEAGUE"],
-        };
 
         // Assign levels to each node for org chart layout
         const levels: Record<string, number> = {};
@@ -172,9 +156,9 @@ export default function EmployeeHierarchyFlow() {
         });
 
         // Calculate positions for each level (banded layout)
-        const levelY = [0, 200, 400, 600, 800];
-        const chartWidth = 1200;
-        const nodeSpacing = 220;
+        const levelY = [0, 250, 500, 750, 1000]; // Increased vertical gap
+        const chartWidth = 1600; // Wider chart for more space
+        const nodeSpacing = 280; // Increased horizontal gap
         const positions: Record<string, { x: number; y: number }> = {};
         Object.entries(nodesByLevel).forEach(([lvlStr, emps]) => {
           const lvl = parseInt(lvlStr);
@@ -269,6 +253,11 @@ export default function EmployeeHierarchyFlow() {
         });
 
         // Only create edges between adjacent levels (as before)
+        const allowedTransitions: { [key: string]: string[] } = {
+          ADMIN: ["MANAGER"],
+          MANAGER: ["LEAD"],
+          LEAD: ["COLLEAGUE"],
+        };
         const edges: Edge[] = relations
           .filter((rel) => {
             const fromRole = roleMap[rel.fromId] || "EMPLOYEE";
@@ -310,10 +299,9 @@ export default function EmployeeHierarchyFlow() {
             };
           });
 
-        // Use dagre for layout
-        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges, "TB");
-        setNodes([...layoutedNodes]);
-        setEdges([...layoutedEdges]);
+        setNodes(nodes);
+        setEdges(edges);
+
       } catch (e: any) {
         setError(e.message || "Unknown error");
       } finally {
@@ -345,7 +333,7 @@ export default function EmployeeHierarchyFlow() {
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
-    <div style={{ width: "100%", height: "600px", position: "relative" }}>
+    <div style={{ width: "100%", height: "90vh", position: "relative" }}>
       {tooltip && (
         <div
           style={{
@@ -381,7 +369,7 @@ export default function EmployeeHierarchyFlow() {
           nodeColor={(n) => {
             if (n.id === selectedNode) return "#10b981";
             if (n.id === hoveredNode) return "#6366f1";
-            const role = n.data?.label?.props?.children?.[2]?.props?.children || "EMPLOYEE";
+            const role = n.data?.label?.props?.children?.[1]?.props?.children?.[1]?.props?.children || "EMPLOYEE";
             if (role === "ADMIN") return "#0070f3";
             if (role === "MANAGER") return "#f59e42";
             if (role === "LEAD") return "#42a5f5";

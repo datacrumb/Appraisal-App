@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 const RELATION_TYPES = ["MANAGER", "LEAD", "COLLEAGUE"];
 
@@ -9,7 +10,7 @@ export default function ManageEmployeeRelations() {
   const [users, setUsers] = useState<any[]>([]);
   const [relations, setRelations] = useState<any[]>([]);
   const [fromId, setFromId] = useState("");
-  const [toId, setToId] = useState("");
+  const [toIds, setToIds] = useState<string[]>([]);
   const [type, setType] = useState(RELATION_TYPES[0]);
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -35,28 +36,33 @@ export default function ManageEmployeeRelations() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fromId || !toId || !type) {
+    if (!fromId || !toIds.length || !type) {
       toast.error("Please select both users and a relation type.");
       return;
     }
-    if (fromId === toId) {
+    if (toIds.includes(fromId)) {
       toast.error("Cannot relate a user to themselves.");
       return;
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/employees/relations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fromId, toId, type }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to add relation");
-      }
-      toast.success("Relation added/updated!");
+      const results = await Promise.all(
+        toIds.map(async (toId) => {
+          const res = await fetch("/api/employees/relations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fromId, toId, type }),
+          });
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || "Failed to add relation");
+          }
+          return res;
+        })
+      );
+      toast.success("Relations added/updated!");
       setFromId("");
-      setToId("");
+      setToIds([]);
       setType(RELATION_TYPES[0]);
       // Refresh relations
       fetch("/api/employees/relations")
@@ -140,19 +146,14 @@ export default function ManageEmployeeRelations() {
           </select>
         </div>
         <div>
-          <label className="block mb-1 font-medium">To (Target Employee):</label>
-          <select
-            className="w-full border rounded-md p-2"
-            value={toId}
-            onChange={(e) => setToId(e.target.value)}
-          >
-            <option value="">-- Select Employee --</option>
-            {users.map((u) => (
-              <option key={u.id} value={u.id}>
-                {u.email}
-              </option>
-            ))}
-          </select>
+          <label className="block mb-1 font-medium">To (Target Employee(s)):</label>
+          <MultiSelect
+            options={users.map((u) => ({ label: u.email, value: u.id }))}
+            value={toIds}
+            onValueChange={setToIds}
+            placeholder="Select one or more employees"
+            className="w-full"
+          />
         </div>
         <div>
           <label className="block mb-1 font-medium">Relation Type:</label>
