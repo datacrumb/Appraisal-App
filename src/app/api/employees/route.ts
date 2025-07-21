@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prsima";
 import { isAdmin } from "@/lib/isAdmin";
 
 
-async function GET(req: NextRequest) {
+export async function GET(req: NextRequest) {
     const { userId } = await auth();
 
     if (!userId) {
@@ -16,11 +16,6 @@ async function GET(req: NextRequest) {
     }
     
     // Fetch all employees and their relations
-    const employees = await prisma.employee.findMany({
-        include: {
-            relationsFrom: true,
-            relationsTo: true,
-        },
-    });
-    return NextResponse.json(employees);
+    const employees = await prisma.employee.findMany();
+    return NextResponse.json({ employees });
 }

@@ -29,12 +29,12 @@ const Assign = () => {
       setFetching(true);
       try {
         const token = await getToken();
-        const res = await fetch("/api/users", {
+        const res = await fetch("/api/employees", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
         if (res.ok) {
-          setUsers(data.users);
+          setUsers(data.employees);
         } else {
           toast.error(data.error || "Failed to fetch users");
         }

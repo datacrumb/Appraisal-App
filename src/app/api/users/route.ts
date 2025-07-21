@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { isAdmin } from "@/lib/isAdmin";
-import { fetchUsers } from "@/lib/fetchEmails";
+import { clerkClient } from "@clerk/nextjs/server";
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth(); // no await needed here
@@ -15,8 +15,12 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const filtered = await fetchUsers(userId);
-    return NextResponse.json({ users: filtered });
+    const usersResponse = (await clerkClient()).users.getUserList();
+    const users = (await usersResponse).data.map((u: any) => ({
+      id: u.id,
+      email: u.emailAddresses?.[0]?.emailAddress || "",
+    }));
+    return NextResponse.json({ users });
   } catch (e: any) {
     return NextResponse.json(
       { error: e.message || "Failed to fetch users" },

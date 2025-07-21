@@ -45,7 +45,7 @@ export default function ManageEmployeeRelations() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/employees/relations/manage", {
+      const res = await fetch("/api/employees/relations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fromId, toId, type }),
