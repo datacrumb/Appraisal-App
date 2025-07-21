@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useUser, useAuth, ClerkProvider } from "@clerk/nextjs";
+import { useUser, useAuth } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -34,7 +34,9 @@ const Assign = () => {
         });
         const data = await res.json();
         if (res.ok) {
-          setUsers(data.employees);
+          // Filter out the current user (admin) from the list
+          const filteredUsers = data.employees.filter((u: any) => u.id !== user?.id);
+          setUsers(filteredUsers);
         } else {
           toast.error(data.error || "Failed to fetch users");
         }
@@ -45,7 +47,7 @@ const Assign = () => {
       }
     };
     if (isAdmin) fetchUsers();
-  }, [isAdmin, getToken]);
+  }, [isAdmin, getToken, user]);
 
   // Fetch all forms
   useEffect(() => {

@@ -10,7 +10,7 @@ const adminNav = [
   { name: "Manage Relations", href: "/manage-relations" },
   { name: "Employees Hierarchy", href: "/hierarchy-graph" },
   { name: "Responses", href: "/responses" },
-  { name: "Add Employee", href: "/add" },
+  { name: "Employees", href: "/employees" },
 ]
 
 const Header = () => {
