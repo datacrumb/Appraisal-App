@@ -13,6 +13,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/auth/verify(.*)",
   "/api/auth/check-approval(.*)",
   "/api/setup-admin(.*)",
+  "/api/debug-onboarding(.*)",
 ]);
 
 const isAdminRoute = createRouteMatcher(["/(Admin)(.*)", "/api/approvals(.*)"]);

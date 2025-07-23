@@ -78,11 +78,27 @@ export async function POST(request: Request) {
 
     // Auto-assign manager relation if specified
     if (onboardingRequest.managerEmail) {
-      const manager = await prisma.employee.findUnique({
-        where: { email: onboardingRequest.managerEmail },
+      console.log(`Looking for manager with name: ${onboardingRequest.managerEmail}`);
+      
+      // Find manager by name (firstName + lastName or just firstName)
+      const manager = await prisma.employee.findFirst({
+        where: {
+          OR: [
+            {
+              AND: [
+                { firstName: onboardingRequest.managerEmail.split(' ')[0] },
+                { lastName: onboardingRequest.managerEmail.split(' ').slice(1).join(' ') }
+              ]
+            },
+            {
+              firstName: onboardingRequest.managerEmail
+            }
+          ]
+        },
       });
 
       if (manager) {
+        console.log(`Found manager: ${manager.firstName} ${manager.lastName} (${manager.email})`);
         // Use upsert to avoid duplicate relation errors
         await prisma.employeeRelation.upsert({
           where: {
@@ -99,7 +115,17 @@ export async function POST(request: Request) {
             type: 'MANAGER',
           },
         });
+        console.log(`Created manager relation: ${manager.id} -> ${employee.id}`);
+      } else {
+        console.log(`No manager found with name: ${onboardingRequest.managerEmail}`);
+        // Log all available managers for debugging
+        const allManagers = await prisma.employee.findMany({
+          where: { isManager: true }
+        });
+        console.log('Available managers:', allManagers.map(m => `${m.firstName} ${m.lastName}`));
       }
+    } else {
+      console.log('No manager specified in onboarding request');
     }
 
     // Auto-assign LEAD relations if employee is a lead
