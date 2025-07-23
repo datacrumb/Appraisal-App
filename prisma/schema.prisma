@@ -65,6 +65,7 @@ model Employee {
   role         String?
   isManager    Boolean  @default(false)
   isLead       Boolean  @default(false)
+  profilePictureUrl String?  // URL to profile picture
   createdAt    DateTime @default(now())
   
   // Relations
@@ -102,6 +103,7 @@ model OnboardingRequest {
   isManager    Boolean  @default(false)
   isLead       Boolean  @default(false)
   managerEmail String?  // Email of their manager
+  profilePictureUrl String?  // URL to profile picture
   status       OnboardingStatus @default(PENDING)
   createdAt    DateTime @default(now())
   approvedAt   DateTime?

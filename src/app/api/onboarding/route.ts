@@ -2,6 +2,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prsima";
 import { isCompanyEmail } from "@/lib/emailValidation";
+import { writeFile, mkdir } from "fs/promises";
+import { join } from "path";
 
 export async function POST(request: Request) {
   const user = await currentUser();
@@ -21,6 +23,36 @@ export async function POST(request: Request) {
     const isManager = formData.get('isManager') as string;
     const isLead = formData.get('isLead') as string;
     const manager = formData.get('manager') as string;
+    const profilePicture = formData.get('profilePicture') as File | null;
+
+    let profilePictureUrl: string | null = null;
+
+    // Handle profile picture file upload
+    if (profilePicture && profilePicture instanceof File) {
+      try {
+        // Create a unique filename
+        const fileExtension = profilePicture.name.split('.').pop();
+        const fileName = `${user.id}-${Date.now()}.${fileExtension}`;
+        
+        // Save to public/uploads directory
+        const uploadDir = join(process.cwd(), 'public', 'uploads');
+        const filePath = join(uploadDir, fileName);
+        
+        // Ensure upload directory exists
+        await mkdir(uploadDir, { recursive: true });
+        
+        // Convert File to Buffer and save
+        const bytes = await profilePicture.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        await writeFile(filePath, buffer);
+        
+        // Store the URL path
+        profilePictureUrl = `/uploads/${fileName}`;
+      } catch (error) {
+        console.error("Failed to save profile picture:", error);
+        // Continue without profile picture
+      }
+    }
 
     // Create onboarding request in database
     const onboardingRequest = await prisma.onboardingRequest.create({
@@ -34,6 +66,7 @@ export async function POST(request: Request) {
         isManager: isManager === 'true',
         isLead: isLead === 'true',
         managerEmail: manager || null,
+        profilePictureUrl,
         status: 'PENDING', // PENDING, APPROVED, REJECTED
       },
     });

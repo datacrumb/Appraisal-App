@@ -58,6 +58,7 @@ export async function POST(request: Request) {
           role: onboardingRequest.role,
           isManager: onboardingRequest.isManager,
           isLead: onboardingRequest.isLead,
+          profilePictureUrl: onboardingRequest.profilePictureUrl,
         },
       });
     } else {
@@ -72,6 +73,7 @@ export async function POST(request: Request) {
           role: onboardingRequest.role,
           isManager: onboardingRequest.isManager,
           isLead: onboardingRequest.isLead,
+          profilePictureUrl: onboardingRequest.profilePictureUrl,
         },
       });
     }

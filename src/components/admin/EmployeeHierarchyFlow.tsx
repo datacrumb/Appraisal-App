@@ -11,6 +11,7 @@ import ReactFlow, {
 } from "reactflow";
 import dagre from "dagre";
 import "reactflow/dist/style.css";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 interface Employee {
   id: string;
@@ -22,6 +23,7 @@ interface Employee {
   isManager: boolean;
   isLead: boolean;
   createdAt: Date;
+  profilePictureUrl?: string | null;
 }
 
 interface Relation {
@@ -33,8 +35,14 @@ interface Relation {
   to: Employee;
 }
 
-// Helper to get initials from email
-function getInitials(email: string) {
+// Helper to get initials from name or email
+function getInitials(firstName: string | null, lastName: string | null, email: string) {
+  if (firstName && lastName) {
+    return `${firstName[0]}${lastName[0]}`.toUpperCase();
+  }
+  if (firstName) {
+    return firstName[0].toUpperCase();
+  }
   if (!email) return "?";
   const [name] = email.split("@");
   return name
@@ -42,6 +50,11 @@ function getInitials(email: string) {
     .map((part) => part[0]?.toUpperCase() || "")
     .join("")
     .slice(0, 2);
+}
+
+// Helper to get Clerk profile picture URL
+function getProfilePictureUrl(employee: Employee) {
+  return employee.profilePictureUrl || null;
 }
 
 const nodeWidth = 220;
@@ -230,18 +243,18 @@ export default function EmployeeHierarchyFlow() {
             data: {
               label: (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: iconBg,
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontWeight: 700,
-                    fontSize: 18,
-                  }}>{getInitials(emp.email)}</div>
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage 
+                      src={getProfilePictureUrl(emp) || undefined} 
+                      alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
+                    />
+                    <AvatarFallback 
+                      className="text-white font-bold text-lg"
+                      style={{ backgroundColor: iconBg }}
+                    >
+                      {getInitials(emp.firstName, emp.lastName, emp.email)}
+                    </AvatarFallback>
+                  </Avatar>
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <span style={{ fontWeight: "bold" }}>{fullName}</span>
                     <span style={{ fontSize: 12, color: "#888" }}>{role}</span>

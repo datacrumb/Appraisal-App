@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 import { isAdmin } from "@/lib/isAdmin";
 
@@ -29,6 +29,9 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    // Use profile pictures from database (no need to fetch from Clerk)
+    const employeesWithProfiles = employees;
+
     // Fetch all relations
     const relations = await prisma.employeeRelation.findMany({
       include: {
@@ -38,7 +41,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
-      employees,
+      employees: employeesWithProfiles,
       relations,
       adminId,
     });
