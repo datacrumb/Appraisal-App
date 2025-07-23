@@ -1,20 +1,24 @@
-import { fetchPendingApprovals, OnboardingRequest } from "@/lib/sheets";
 import { ApprovalsList } from "@/components/admin/ApprovalsList";
+import { prisma } from "@/lib/prsima";
+import { auth } from "@clerk/nextjs/server";
+import { isAdmin } from "@/lib/isAdmin";
+import { redirect } from "next/navigation";
 
 export default async function ApprovalsPage() {
-  let pendingApprovals: OnboardingRequest[] = [];
-  let error: string | null = null;
-  try {
-    pendingApprovals = await fetchPendingApprovals();
-  } catch (e: any) {
-    error = e.message;
+  const { userId } = await auth();
+  if (!userId || !(await isAdmin(userId))) {
+    redirect("/");
   }
+
+  const pendingRequests = await prisma.onboardingRequest.findMany({
+    where: { status: 'PENDING' },
+    orderBy: { createdAt: 'asc' },
+  });
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Pending Approvals</h1>
-      {error && <p className="text-red-500">Error fetching approvals: {error}</p>}
-      {!error && <ApprovalsList initialApprovals={pendingApprovals} />}
+      <ApprovalsList initialRequests={pendingRequests} />
     </div>
   );
 }

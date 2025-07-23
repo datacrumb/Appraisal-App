@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { hasUserSubmitted, isUserApproved } from "@/lib/sheets";
+import { prisma } from "@/lib/prsima";
 
 export async function GET() {
   try {
@@ -11,8 +11,14 @@ export async function GET() {
     }
 
     const userId = user.id;
-    const hasSubmitted = await hasUserSubmitted(userId);
-    const isApproved = await isUserApproved(userId);
+    
+    // Check if user has submitted onboarding request
+    const onboardingRequest = await prisma.onboardingRequest.findUnique({
+      where: { userId: userId },
+    });
+
+    const hasSubmitted = !!onboardingRequest;
+    const isApproved = onboardingRequest?.status === 'APPROVED';
 
     return NextResponse.json({
       hasSubmitted: hasSubmitted,

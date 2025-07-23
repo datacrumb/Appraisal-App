@@ -8,11 +8,11 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/onboarding(.*)",
   "/api/onboarding(.*)",
-  "/api/departments(.*)",
   "/api/managers(.*)",
   "/api/auth/session(.*)",
   "/api/auth/verify(.*)",
   "/api/auth/check-approval(.*)",
+  "/api/setup-admin(.*)",
 ]);
 
 const isAdminRoute = createRouteMatcher(["/(Admin)(.*)", "/api/approvals(.*)"]);
@@ -40,18 +40,19 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return NextResponse.redirect(onboardingUrl);
   }
 
-  // For admin routes, check if user is admin first
-  if (isAdminRoute(req)) {
-    const { isAdmin } = await import('./lib/isAdmin');
-    const isUserAdmin = await isAdmin(userId);
-    console.log(`User ${userId} is admin: ${isUserAdmin}`);
-    
-    if (!isUserAdmin) {
-      const homeUrl = new URL("/", req.url);
-      return NextResponse.redirect(homeUrl);
-    }
-    // If user is admin, allow access to admin routes regardless of approval status
+  // Check if user is admin first (for all routes)
+  const { isAdmin } = await import('./lib/isAdmin');
+  const isUserAdmin = await isAdmin(userId);
+  
+  // If user is admin, allow access to all routes regardless of approval status
+  if (isUserAdmin) {
     return NextResponse.next();
+  }
+
+  // For admin routes, redirect non-admin users to home
+  if (isAdminRoute(req)) {
+    const homeUrl = new URL("/", req.url);
+    return NextResponse.redirect(homeUrl);
   }
 
   // For non-admin routes, check if user is approved
@@ -70,7 +71,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       return NextResponse.next();
     }
   }
-  
+
   return NextResponse.next();
 });
 

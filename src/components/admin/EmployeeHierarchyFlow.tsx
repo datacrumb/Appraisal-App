@@ -15,10 +15,13 @@ import "reactflow/dist/style.css";
 interface Employee {
   id: string;
   email: string;
-  role: string;
   firstName: string | null;
   lastName: string | null;
-  imageUrl: string;
+  department: string | null;
+  role: string | null;
+  isManager: boolean;
+  isLead: boolean;
+  createdAt: Date;
 }
 
 interface Relation {
@@ -26,6 +29,8 @@ interface Relation {
   fromId: string;
   toId: string;
   type: string;
+  from: Employee;
+  to: Employee;
 }
 
 // Helper to get initials from email
@@ -93,57 +98,62 @@ export default function EmployeeHierarchyFlow() {
       setLoading(true);
       setError(null);
       try {
-        const adminRes = await fetch("/api/employees/is-admin");
-        if (!adminRes.ok) throw new Error("Failed to fetch admin ID");
-        const adminData = await adminRes.json();
-        const adminId: string = adminData.adminId;
+        // Fetch hierarchy data from new database-based endpoint
+        const hierarchyRes = await fetch("/api/employees/hierarchy");
+        if (!hierarchyRes.ok) throw new Error("Failed to fetch hierarchy data");
+        const hierarchyData = await hierarchyRes.json();
+        
+        const employees: Employee[] = hierarchyData.employees || [];
+        const relations: Relation[] = hierarchyData.relations || [];
+        const adminId: string = hierarchyData.adminId;
+
         if (!adminId) throw new Error("No admin found");
 
-        const usersRes = await fetch("/api/users");
-        if (!usersRes.ok) throw new Error("Failed to fetch users");
-        const usersData = await usersRes.json();
-        const employees: Employee[] = usersData.users || [];
-        const employeeMap: Record<string, Employee> = {};
-        employees.forEach(emp => { employeeMap[emp.id] = emp; });
-
-        const relRes = await fetch("/api/employees/relations");
-        if (!relRes.ok) throw new Error("Failed to fetch relations");
-        const relData = await relRes.json();
-        const relations: Relation[] = relData.relations || [];
-
+        // Build role map based on employee properties and relations
         const roleMap: Record<string, string> = {};
-        relations.forEach((rel) => {
-          if (rel.type === "MANAGER" || rel.type === "LEAD" || rel.type === "COLLEAGUE") {
-            if (!roleMap[rel.toId]) roleMap[rel.toId] = rel.type;
+        
+        // Assign roles based on employee properties
+        employees.forEach(emp => {
+          if (emp.isManager) {
+            roleMap[emp.id] = "MANAGER";
+          } else if (emp.isLead) {
+            roleMap[emp.id] = "LEAD";
+          } else {
+            roleMap[emp.id] = "EMPLOYEE";
           }
         });
+        
+        // Admin gets highest priority
         roleMap[adminId] = "ADMIN";
-        employees.forEach(emp => {
-          if (!roleMap[emp.id]) roleMap[emp.id] = "EMPLOYEE";
-        });
 
         // Assign levels to each node for org chart layout
         const levels: Record<string, number> = {};
         levels[adminId] = 0;
+        
         // First, assign managers (direct children of admin)
         employees.forEach(emp => {
           if (roleMap[emp.id] === "MANAGER") {
             levels[emp.id] = 1;
           }
         });
+        
         // Then assign leads (direct children of managers)
         relations.forEach(rel => {
-          if (roleMap[rel.toId] === "LEAD" && roleMap[rel.fromId] === "MANAGER") {
+          if (rel.type === "MANAGER" && roleMap[rel.toId] === "LEAD") {
             levels[rel.toId] = 2;
           }
         });
-        // Then assign colleagues (direct children of leads)
+        
+        // Then assign employees (direct children of leads or managers)
         relations.forEach(rel => {
-          if (roleMap[rel.toId] === "COLLEAGUE" && roleMap[rel.fromId] === "LEAD") {
+          if (rel.type === "MANAGER" && roleMap[rel.toId] === "EMPLOYEE") {
+            levels[rel.toId] = 2;
+          } else if (rel.type === "LEAD" && roleMap[rel.toId] === "EMPLOYEE") {
             levels[rel.toId] = 3;
           }
         });
-        // Fallback: assign EMPLOYEE or unknown to bottom level
+        
+        // Fallback: assign unknown to bottom level
         employees.forEach(emp => {
           if (levels[emp.id] === undefined) {
             levels[emp.id] = 4;
@@ -210,32 +220,34 @@ export default function EmployeeHierarchyFlow() {
             border = "3px solid #6366f1";
             background = "#eef2ff";
           }
-          const fullName = emp.firstName && emp.lastName ? `${emp.firstName} ${emp.lastName}` : emp.email;
+          
+          const fullName = emp.firstName && emp.lastName 
+            ? `${emp.firstName} ${emp.lastName}` 
+            : emp.email;
           
           return {
             id: emp.id,
             data: {
               label: (
                 <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  {emp.imageUrl ? (
-                    <img src={emp.imageUrl} alt={fullName} style={{ width: 40, height: 40, borderRadius: "50%" }} />
-                  ) : (
-                    <div style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      background: iconBg,
-                      color: "#fff",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 700,
-                      fontSize: 18,
-                    }}>{getInitials(emp.email)}</div>
-                  )}
+                  <div style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    background: iconBg,
+                    color: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: 700,
+                    fontSize: 18,
+                  }}>{getInitials(emp.email)}</div>
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     <span style={{ fontWeight: "bold" }}>{fullName}</span>
                     <span style={{ fontSize: 12, color: "#888" }}>{role}</span>
+                    {emp.department && (
+                      <span style={{ fontSize: 10, color: "#aaa" }}>{emp.department}</span>
+                    )}
                   </div>
                 </div>
               ),
@@ -258,51 +270,40 @@ export default function EmployeeHierarchyFlow() {
           };
         });
 
-        // Only create edges between adjacent levels (as before)
-        const allowedTransitions: { [key: string]: string[] } = {
-          ADMIN: ["MANAGER"],
-          MANAGER: ["LEAD"],
-          LEAD: ["COLLEAGUE"],
-        };
-        const edges: Edge[] = relations
-          .filter((rel) => {
-            const fromRole = roleMap[rel.fromId] || "EMPLOYEE";
-            const toRole = roleMap[rel.toId] || "EMPLOYEE";
-            return allowedTransitions[fromRole]?.includes(toRole);
-          })
-          .map((rel) => {
-            let stroke, strokeDasharray;
-            if (rel.type === "MANAGER") {
-              stroke = "#0070f3";
-            } else if (rel.type === "LEAD") {
-              stroke = "#f59e42";
-              strokeDasharray = "5,5";
-            } else if (rel.type === "COLLEAGUE") {
-              stroke = "#6366f1";
-              strokeDasharray = "2,4";
-            } else {
-              stroke = "#aaa";
-            }
-            return {
-              id: rel.id,
-              source: rel.fromId,
-              target: rel.toId,
-              animated: rel.type === "MANAGER" || rel.type === "LEAD",
-              style: {
-                stroke,
-                strokeDasharray,
-                strokeWidth: 2,
-              },
-              labelStyle: {
-                fill: "#333",
-                fontWeight: 600,
-                fontSize: 13,
-                background: "#fff",
-                padding: "2px 6px",
-                borderRadius: 4,
-              },
-            };
-          });
+        // Create edges from relations
+        const edges: Edge[] = relations.map((rel) => {
+          let stroke, strokeDasharray;
+          if (rel.type === "MANAGER") {
+            stroke = "#0070f3";
+          } else if (rel.type === "LEAD") {
+            stroke = "#f59e42";
+            strokeDasharray = "5,5";
+          } else if (rel.type === "COLLEAGUE") {
+            stroke = "#6366f1";
+            strokeDasharray = "2,4";
+          } else {
+            stroke = "#aaa";
+          }
+          return {
+            id: rel.id,
+            source: rel.fromId,
+            target: rel.toId,
+            animated: rel.type === "MANAGER" || rel.type === "LEAD",
+            style: {
+              stroke,
+              strokeDasharray,
+              strokeWidth: 2,
+            },
+            labelStyle: {
+              fill: "#333",
+              fontWeight: 600,
+              fontSize: 13,
+              background: "#fff",
+              padding: "2px 6px",
+              borderRadius: 4,
+            },
+          };
+        });
 
         setNodes(nodes);
         setEdges(edges);
@@ -323,7 +324,7 @@ export default function EmployeeHierarchyFlow() {
     setTooltip({
       x: rect.left + rect.width / 2,
       y: rect.top - 8,
-      label: node.data?.label?.props?.children?.[1] || node.id,
+      label: node.data?.label?.props?.children?.[1]?.props?.children?.[0]?.props?.children || node.id,
     });
   };
   const handleNodeMouseLeave = () => {

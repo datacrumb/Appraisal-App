@@ -55,10 +55,19 @@ model Summary {
   approvedAt   DateTime?
 }
 
+// Updated Employee model with comprehensive fields
 model Employee {
-  id        String   @id           // Clerk User ID
-  email     String   @unique
-  // Optionally: name, title, etc.
+  id           String   @id           // Clerk User ID
+  email        String   @unique
+  firstName    String?
+  lastName     String?
+  department   String?
+  role         String?
+  isManager    Boolean  @default(false)
+  isLead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  
+  // Relations
   relationsFrom EmployeeRelation[] @relation("FromEmployee")
   relationsTo   EmployeeRelation[] @relation("ToEmployee")
 }
@@ -79,5 +88,28 @@ enum RelationType {
   MANAGER
   LEAD
   COLLEAGUE
-  // Add more as needed
+}
+
+// New model for onboarding requests (replaces Google Sheets)
+model OnboardingRequest {
+  id           String   @id @default(uuid())
+  userId       String   @unique // Clerk User ID
+  email        String
+  firstName    String
+  lastName     String
+  department   String
+  role         String
+  isManager    Boolean  @default(false)
+  isLead       Boolean  @default(false)
+  managerEmail String?  // Email of their manager
+  status       OnboardingStatus @default(PENDING)
+  createdAt    DateTime @default(now())
+  approvedAt   DateTime?
+  approvedBy   String?  // Admin who approved
+}
+
+enum OnboardingStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

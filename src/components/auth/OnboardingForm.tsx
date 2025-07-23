@@ -32,18 +32,39 @@ const formSchema = z.object({
   profilePicture: z.instanceof(File).optional(),
 });
 
+// Static departments
+const departments = [
+  "Executive",
+  "Engineering",
+  "Product", 
+  "Design",
+  "Sales",
+  "Marketing",
+  "Operations",
+  "Finance",
+  "HR"
+];
+
+// Static roles
 const roles = [
   "Software Engineer",
   "Product Manager",
   "Designer",
   "Team Lead",
   "Manager",
+  "Sales Representative",
+  "Marketing Specialist",
+  "Operations Manager",
+  "Financial Analyst",
+  "HR Specialist",
+  "CEO",
+  "CTO",
+  "CFO",
 ];
 
 export function OnboardingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [departments, setDepartments] = useState<string[]>([]);
   const [managers, setManagers] = useState<Array<{userId: string, name: string}>>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   
@@ -66,31 +87,21 @@ export function OnboardingForm() {
     checkSubmissionStatus();
   }, []);
 
-  // Fetch departments and managers on component mount
+  // Fetch managers on component mount
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchManagers = async () => {
       try {
-        const [deptResponse, managersResponse] = await Promise.all([
-          fetch("/api/departments"),
-          fetch("/api/managers")
-        ]);
-        
-        if (deptResponse.ok) {
-          const deptData = await deptResponse.json();
-          console.log("Department data received:", deptData);
-          setDepartments(deptData.departments);
-        }
-        
+        const managersResponse = await fetch("/api/managers");
         if (managersResponse.ok) {
           const managersData = await managersResponse.json();
           setManagers(managersData.managers);
         }
       } catch (error) {
-        console.error("Error fetching form data:", error);
+        console.error("Error fetching managers:", error);
       }
     };
     
-    fetchData();
+    fetchManagers();
   }, []);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -246,12 +257,12 @@ export function OnboardingForm() {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Are you a Manager?</FormLabel>
+                  <FormLabel>I am a Manager</FormLabel>
                 </div>
               </FormItem>
             )}
           />
-
+          
           <FormField
             control={form.control}
             name="isLead"
@@ -266,7 +277,7 @@ export function OnboardingForm() {
                   />
                 </FormControl>
                 <div className="space-y-1 leading-none">
-                  <FormLabel>Are you a Team Lead?</FormLabel>
+                  <FormLabel>I am a Team Lead</FormLabel>
                 </div>
               </FormItem>
             )}
@@ -276,49 +287,26 @@ export function OnboardingForm() {
         <FormField
           control={form.control}
           name="manager"
-          render={({ field }) => {
-            const selectedRole = form.watch('role');
-            const isCEOOrAdmin = selectedRole?.toLowerCase().includes('ceo') || 
-                                selectedRole?.toLowerCase().includes('admin');
-            
-            // Only show manager field if a role is selected and it's not CEO/Admin
-            const shouldShowManager = selectedRole && !isCEOOrAdmin && managers.length > 0;
-            
-            return (
-              <FormItem>
-                <FormLabel>
-                  Manager/Lead 
-                  {isCEOOrAdmin && " (Not required for CEO/Admin)"}
-                </FormLabel>
-                {shouldShowManager ? (
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select your manager or lead" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {managers.map((manager) => (
-                        <SelectItem key={manager.userId} value={manager.userId}>
-                          {manager.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="text-sm text-gray-500 dark:text-gray-400 p-2 bg-gray-50 dark:bg-gray-800 rounded">
-                    {!selectedRole 
-                      ? "Please select a role first"
-                      : isCEOOrAdmin 
-                        ? "CEO/Admin positions do not require a manager."
-                        : "No managers available for this department."
-                    }
-                  </div>
-                )}
-                <FormMessage />
-              </FormItem>
-            );
-          }}
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Manager (Optional)</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select your manager (optional)" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {managers.map((manager) => (
+                    <SelectItem key={manager.userId} value={manager.name}>
+                      {manager.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
 
         <FormField
