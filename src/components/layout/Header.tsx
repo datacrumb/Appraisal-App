@@ -11,6 +11,7 @@ const adminNav = [
   { name: "Employees Hierarchy", href: "/hierarchy-graph" },
   { name: "Responses", href: "/responses" },
   { name: "Employees", href: "/employees" },
+  { name: "Approvals", href: "/approvals" },
 ]
 
 const Header = () => {

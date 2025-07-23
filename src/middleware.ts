@@ -1,61 +1,76 @@
 import { NextResponse } from "next/server";
-import {
-  clerkMiddleware,
-  createRouteMatcher,
-} from "@clerk/nextjs/server";
-import { isAdmin } from "./lib/isAdmin";
-import { isEmployee } from "./lib/isEmployee";
+import type { NextRequest } from 'next/server';
+import { clerkClient, clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { isCompanyEmail } from "@/lib/emailValidation";
 
-// Matchers for admin and employee routes
-const isAdminRoute = createRouteMatcher([
-  "/api/forms(.*)",
-  "/api/users(.*)",
-  "/api/summaries(.*)",
-  "/app/(Admin)(.*)"
+const isPublicRoute = createRouteMatcher([
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/onboarding(.*)",
+  "/api/onboarding(.*)",
+  "/api/departments(.*)",
+  "/api/managers(.*)",
+  "/api/auth/session(.*)",
+  "/api/auth/verify(.*)",
+  "/api/auth/check-approval(.*)",
 ]);
-const isEmployeeRoute = createRouteMatcher([
-  "/api/assignments(.*)",
-  "/app/(Reviewer)(.*)",
-  "/app/(Reviewee)(.*)"
-]);
-const isProtectedRoute = createRouteMatcher(["/api(.*)", "/(.*)"]);
 
-export default clerkMiddleware(async (auth, req) => {
+const isAdminRoute = createRouteMatcher(["/(Admin)(.*)", "/api/approvals(.*)"]);
+
+export default clerkMiddleware(async (auth, req: NextRequest) => {
+  if (isPublicRoute(req)) {
+    return NextResponse.next();
+  }
+
   const { userId } = await auth();
-  const url = req.nextUrl.clone();
-  url.pathname = "/sign-in";
-
-  // Allow sign-in and sign-up pages to be accessed without authentication
-  if (req.nextUrl.pathname === "/sign-in" || req.nextUrl.pathname === "/sign-up") {
-    return NextResponse.next();
-  }
-
-  // If the user is not logged in, redirect to /sign-in
   if (!userId) {
-    return NextResponse.redirect(url.toString());
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("redirect_url", req.url);
+    return NextResponse.redirect(signInUrl);
   }
 
-  // Admin-only routes
+  // Get user details to check email
+  const clerk = await clerkClient();
+  const user = await clerk.users.getUser(userId);
+  const userEmail = user.emailAddresses?.[0]?.emailAddress;
+
+  // If not company email, redirect to onboarding
+  if (!userEmail || !isCompanyEmail(userEmail)) {
+    const onboardingUrl = new URL("/onboarding", req.url);
+    return NextResponse.redirect(onboardingUrl);
+  }
+
+  // For admin routes, check if user is admin first
   if (isAdminRoute(req)) {
+    const { isAdmin } = await import('./lib/isAdmin');
     const isUserAdmin = await isAdmin(userId);
+    console.log(`User ${userId} is admin: ${isUserAdmin}`);
+    
     if (!isUserAdmin) {
-      return NextResponse.redirect(url.toString());
+      const homeUrl = new URL("/", req.url);
+      return NextResponse.redirect(homeUrl);
     }
-  }
-
-  // Employee-only routes
-  if (isEmployeeRoute(req)) {
-    const isUserEmployee = await isEmployee(userId);
-    if (!isUserEmployee) {
-      return NextResponse.redirect(url.toString());
-    }
-  }
-
-  // For all other protected routes, just require authentication
-  if (isProtectedRoute(req)) {
+    // If user is admin, allow access to admin routes regardless of approval status
     return NextResponse.next();
   }
 
+  // For non-admin routes, check if user is approved
+  const checkApprovalUrl = new URL('/api/auth/check-approval', req.url);
+  const approvalResponse = await fetch(checkApprovalUrl, {
+    headers: { 'Cookie': req.headers.get('Cookie') || '' },
+  });
+
+  if (approvalResponse.ok) {
+    const { isApproved } = await approvalResponse.json();
+    
+    if (!isApproved && req.nextUrl.pathname !== '/onboarding') {
+      const onboardingUrl = new URL("/onboarding", req.url);
+      return NextResponse.redirect(onboardingUrl);
+    } else {
+      return NextResponse.next();
+    }
+  }
+  
   return NextResponse.next();
 });
 
@@ -64,5 +79,4 @@ export const config = {
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
     "/(api|trpc)(.*)",
   ],
-  publicRoutes: ["/sign-in(.*)", "/sign-up(.*)"],
 };
