@@ -10,10 +10,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/onboarding(.*)",
   "/api/managers(.*)",
   "/api/auth/session(.*)",
-  "/api/auth/verify(.*)",
   "/api/auth/check-approval(.*)",
-  "/api/setup-admin(.*)",
-  "/api/debug-onboarding(.*)",
 ]);
 
 const isAdminRoute = createRouteMatcher(["/(Admin)(.*)", "/api/approvals(.*)"]);
