@@ -1,7 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/auth/OnboardingForm";
-import { isUserApproved } from "@/lib/sheets";
 import { isCompanyEmail } from "@/lib/emailValidation";
 import { SignOutButton } from "@clerk/nextjs";
 
