@@ -46,7 +46,7 @@ const PayoutCard = () => {
   ];
 
   return (
-    <div className="bg-white rounded-xl p-4 sm:p-6 shadow-sm">
+    <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 shadow-sm">
       <div className="mb-3 sm:mb-4">
         <p className="text-xs sm:text-sm text-gray-500">Payout monthly</p>
         <h3 className="font-bold text-gray-900 text-sm sm:text-base">Salaries and incentive</h3>

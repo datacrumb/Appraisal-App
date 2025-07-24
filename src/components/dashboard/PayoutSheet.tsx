@@ -15,9 +15,10 @@ const PayoutSheet = () => {
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
-          className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 rounded-full w-12 h-12 sm:w-14 sm:h-14 p-0 shadow-lg hover:shadow-xl transition-all duration-300 bg-white hover:bg-gray-50 border-2 border-blue-200 hover:border-blue-300"
+          className="rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
         >
-          <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+          <CreditCard className="w-4 h-4 mr-2" />
+          Payment
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:w-[400px] md:w-[500px] p-0">

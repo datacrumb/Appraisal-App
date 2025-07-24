@@ -140,6 +140,7 @@ const Dashboard = () => {
               <FileText className="w-4 h-4 mr-2" />
               Add report
             </Button>
+            <PayoutSheet />
           </div>
         </div>
 
