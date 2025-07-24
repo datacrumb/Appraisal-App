@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const HiringStatisticsCard = () => {
   return (
-    <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 shadow-sm">
+    <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 shadow-sm h-fit">
       <div className="flex items-center justify-between mb-3 sm:mb-4">
         <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Hiring statistics</h3>
         <Button className="bg-white hover:bg-white/80 p-1 sm:p-2 rounded-xl">
