@@ -169,9 +169,6 @@ const Dashboard = () => {
             </div>
           </div>
         </div>
-
-        {/* Payout Sheet Trigger */}
-        <PayoutSheet />
       </div>
     </div>
   );
