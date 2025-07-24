@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
@@ -15,99 +9,94 @@ datasource db {
 }
 
 model Form {
-  id          String      @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
-  questions   Json        // Array of questions (customizable)
-  createdAt   DateTime    @default(now())
-  createdBy   String      // Admin User ID (Clerk)
+  questions   Json
+  createdAt   DateTime     @default(now())
+  createdBy   String
   assignments Assignment[]
 }
 
 model Assignment {
-  id            String      @id @default(uuid())
-  form          Form        @relation(fields: [formId], references: [id])
+  id            String     @id @default(uuid())
   formId        String
-  employeeId    String      // Clerk User ID
-  employeeEmail String      // Store email at assignment time
+  employeeId    String
+  assignedAt    DateTime   @default(now())
+  employeeEmail String
+  form          Form       @relation(fields: [formId], references: [id])
   responses     Response[]
   summary       Summary?
-  assignedAt    DateTime    @default(now())
 }
 
 model Response {
-  id           String      @id @default(uuid())
-  assignment   Assignment  @relation(fields: [assignmentId], references: [id])
+  id           String     @id @default(uuid())
   assignmentId String
-  responderId  String      // Clerk User ID (self or peer)
-  answers      Json        // Answers to the form questions
-  createdAt    DateTime    @default(now())
-  isPeer       Boolean     // True if this is a peer feedback, false if self
+  responderId  String
+  answers      Json
+  createdAt    DateTime   @default(now())
+  isPeer       Boolean
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
 }
 
 model Summary {
-  id           String      @id @default(uuid())
-  assignment   Assignment  @relation(fields: [assignmentId], references: [id])
-  assignmentId String      @unique
-  content      String      // AI-generated summary
-  approved     Boolean     // Admin approval
-  createdAt    DateTime    @default(now())
+  id           String     @id @default(uuid())
+  assignmentId String     @unique
+  content      String
+  approved     Boolean
+  createdAt    DateTime   @default(now())
   approvedAt   DateTime?
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
 }
 
-// Updated Employee model with comprehensive fields
 model Employee {
-  id           String   @id           // Clerk User ID
-  email        String   @unique
-  firstName    String?
-  lastName     String?
-  department   String?
-  role         String?
-  isManager    Boolean  @default(false)
-  isLead       Boolean  @default(false)
-  profilePictureUrl String?  // URL to profile picture
-  createdAt    DateTime @default(now())
-  
-  // Relations
-  relationsFrom EmployeeRelation[] @relation("FromEmployee")
-  relationsTo   EmployeeRelation[] @relation("ToEmployee")
+  id                String             @id
+  email             String             @unique
+  createdAt         DateTime           @default(now())
+  department        String?
+  firstName         String?
+  isLead            Boolean            @default(false)
+  isManager         Boolean            @default(false)
+  lastName          String?
+  role              String?
+  profilePictureUrl String?
+  relationsFrom     EmployeeRelation[] @relation("FromEmployee")
+  relationsTo       EmployeeRelation[] @relation("ToEmployee")
 }
 
 model EmployeeRelation {
-  id           String   @id @default(uuid())
-  fromId       String
-  toId         String
-  type         RelationType
-
-  from         Employee @relation("FromEmployee", fields: [fromId], references: [id])
-  to           Employee @relation("ToEmployee", fields: [toId], references: [id])
+  id     String       @id @default(uuid())
+  fromId String
+  toId   String
+  type   RelationType
+  from   Employee     @relation("FromEmployee", fields: [fromId], references: [id])
+  to     Employee     @relation("ToEmployee", fields: [toId], references: [id])
 
   @@unique([fromId, toId, type])
+}
+
+model OnboardingRequest {
+  id                String           @id @default(uuid())
+  userId            String           @unique
+  email             String
+  firstName         String
+  lastName          String
+  department        String
+  role              String
+  isManager         Boolean          @default(false)
+  isLead            Boolean          @default(false)
+  managerEmail      String?
+  status            OnboardingStatus @default(PENDING)
+  createdAt         DateTime         @default(now())
+  approvedAt        DateTime?
+  approvedBy        String?
+  profilePictureUrl String?
 }
 
 enum RelationType {
   MANAGER
   LEAD
   COLLEAGUE
-}
-
-// New model for onboarding requests (replaces Google Sheets)
-model OnboardingRequest {
-  id           String   @id @default(uuid())
-  userId       String   @unique // Clerk User ID
-  email        String
-  firstName    String
-  lastName     String
-  department   String
-  role         String
-  isManager    Boolean  @default(false)
-  isLead       Boolean  @default(false)
-  managerEmail String?  // Email of their manager
-  profilePictureUrl String?  // URL to profile picture
-  status       OnboardingStatus @default(PENDING)
-  createdAt    DateTime @default(now())
-  approvedAt   DateTime?
-  approvedBy   String?  // Admin who approved
 }
 
 enum OnboardingStatus {
