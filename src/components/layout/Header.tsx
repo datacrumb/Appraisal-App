@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser, SignInButton, SignOutButton, SignedIn, UserButton } from "@clerk/nextjs";
+import { useUser, SignInButton, SignedIn, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 import { FileText, Users } from "lucide-react";
 
@@ -19,7 +19,6 @@ const Header = () => {
   const pathname = usePathname();
   const { user, isLoaded } = useUser();
   const isAdmin = user?.publicMetadata?.role === "admin";
-  const isEmployee = user?.publicMetadata?.role === "employee";
 
   return (
     <nav className="w-full flex items-center justify-between px-6 py-3 border-b bg-white">
