@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { TrendingUp, TrendingDown, Globe, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, Globe } from "lucide-react";
 import { LuUserRoundCheck } from "react-icons/lu";
+import { BsHourglassSplit } from "react-icons/bs";
 
 const HoursWeeksCard = () => {
   const [activeTab, setActiveTab] = useState<'onsite' | 'remote'>('onsite');
@@ -11,7 +12,7 @@ const HoursWeeksCard = () => {
         <div className="flex-1">
           <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
             <div className="w-8 h-8 sm:w-10 sm:h-10 bg-cyan-700 rounded-xl flex items-center justify-center">
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <BsHourglassSplit className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
             </div>
             <div className="flex items-baseline gap-1 sm:gap-2">
               <span className="text-2xl sm:text-3xl font-bold text-gray-900">46,5</span>

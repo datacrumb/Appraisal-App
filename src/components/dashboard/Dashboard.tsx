@@ -145,7 +145,7 @@ const Dashboard = () => {
 
         {/* Greeting */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Good morning {name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Good morning {name.toLowerCase() == 'undefined undefined' ? "User" : name}</h1>
         </div>
 
         {/* Dashboard Grid */}
