@@ -29,15 +29,14 @@ const Header = () => {
             {adminNav.map((link, index) => {
               const IconComponent = link.icon;
               const isActive = pathname === link.href;
-              
+
               return (
                 <Link key={index} href={link.href}>
-                  <Button 
-                    className={`rounded-full transition-colors ${
-                      isActive 
-                        ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+                  <Button
+                    className={`rounded-full transition-colors ${isActive
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
                         : 'hover:bg-gray-100'
-                    }`}
+                      }`}
                     variant="ghost"
                   >
                     {IconComponent && <IconComponent className="w-4 h-4 mr-2" />}
@@ -49,17 +48,12 @@ const Header = () => {
           </>
         )}
       </div>
-      
+
       <div className="flex items-center gap-4">
         {isLoaded ? (
-          <>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-            <SignOutButton>
-              <Button variant="outline">Sign Out</Button>
-            </SignOutButton>
-          </>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
         ) : (
           <SignInButton>
             <Button>Sign In</Button>
