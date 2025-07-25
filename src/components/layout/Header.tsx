@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser, SignInButton, SignedIn, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, Menu } from "lucide-react";
+import { FileText, Users, Menu, ClipboardList } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -16,7 +16,7 @@ import {
 
 const adminNav = [
   { name: "Dashboard", href: "/", icon: null },
-  { name: "Assign", href: "/assign", icon: FileText },
+  { name: "Forms", href: "/forms", icon: ClipboardList },
   { name: "Employee Hierarchy", href: "/hierarchy-graph", icon: Users },
   { name: "Responses", href: "/responses", icon: FileText },
   { name: "Employee Management", href: "/management", icon: FileText },

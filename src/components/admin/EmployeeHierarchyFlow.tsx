@@ -13,7 +13,7 @@ import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, FileText, CheckCircle } from "lucide-react";
+import { RefreshCw, FileText, CheckCircle, XCircle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -144,6 +144,7 @@ export default function EmployeeHierarchyFlow() {
   const triggerFormAssignment = async () => {
     setAssigningForms(true);
     setAssignmentSuccess(false);
+    setError(null);
     
     try {
       const response = await fetch("/api/forms/auto-assign", {
@@ -153,21 +154,27 @@ export default function EmployeeHierarchyFlow() {
         },
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        throw new Error("Failed to assign forms");
+        throw new Error(result.error || "Failed to assign forms");
       }
 
-      const result = await response.json();
       setAssignmentSuccess(true);
       
-      // Reset success message after 3 seconds
+      // Reset success message after 5 seconds
       setTimeout(() => {
         setAssignmentSuccess(false);
-      }, 3000);
+      }, 5000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("Form assignment failed:", error);
-      setError("Failed to assign forms. Please try again.");
+      setError(error.message || "Failed to assign forms. Please try again.");
+      
+      // Reset error after 5 seconds
+      setTimeout(() => {
+        setError(null);
+      }, 5000);
     } finally {
       setAssigningForms(false);
     }
@@ -474,7 +481,7 @@ export default function EmployeeHierarchyFlow() {
                 size="sm"
                 onClick={triggerFormAssignment}
                 disabled={assigningForms}
-                className="absolute top-4 right-4 z-10 bg-blue-600 hover:bg-blue-700 text-white"
+                className="absolute top-4 right-4 z-10 bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
               >
                 {assigningForms ? (
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -483,21 +490,45 @@ export default function EmployeeHierarchyFlow() {
                 ) : (
                   <FileText className="h-4 w-4" />
                 )}
-                <span className="ml-2">
-                  {assigningForms ? "Assigning..." : assignmentSuccess ? "Assigned!" : "Assign Forms"}
+                <span className="ml-2 font-medium">
+                  {assigningForms ? "Assigning..." : assignmentSuccess ? "Assigned!" : "Auto-Assign Forms"}
                 </span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Automatically assign forms to managers and employees</p>
+            <TooltipContent className="max-w-xs">
+              <div className="space-y-2">
+                <p className="font-medium">Auto-Assign Forms</p>
+                <p className="text-sm text-gray-600">
+                  Automatically assigns Manager forms to managers and Employee forms to their direct reports based on the hierarchy.
+                </p>
+              </div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         
         {/* Success Message */}
         {assignmentSuccess && (
-          <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg">
-            Forms assigned successfully!
+          <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <div>
+                <p className="font-medium">Forms Assigned Successfully!</p>
+                <p className="text-sm">Managers and employees can now access their forms in the Assignments section.</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
+            <div className="flex items-center gap-2">
+              <XCircle className="h-4 w-4" />
+              <div>
+                <p className="font-medium">Assignment Failed</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
           </div>
         )}
       </ReactFlow>

@@ -6,6 +6,7 @@ import { isAdmin } from "@/lib/isAdmin";
 
 // Zod schema for validation
 const formSchema = z.object({
+  id: z.string().optional(),
   title: z.string().min(1),
   description: z.string().optional(),
   questions: z.array(z.object({
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
   // Create form
   const form = await prisma.form.create({
     data: {
+      id: parsed.data.id || undefined,
       title: parsed.data.title,
       description: parsed.data.description,
       questions: parsed.data.questions,

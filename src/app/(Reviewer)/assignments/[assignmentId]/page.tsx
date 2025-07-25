@@ -11,7 +11,7 @@ type Assignment = {
   form: {
     title: string;
     description?: string;
-    questions: { label: string; type: string }[];
+    questions: any; // Can be object or array
   };
 };
 
@@ -36,13 +36,27 @@ export default function AssignmentReviewPage() {
   if (loading) return <div>Loading...</div>;
   if (!assignment) return <div>Assignment not found.</div>;
 
+  // Ensure questions is always an array
+  const questions = Array.isArray(assignment.form.questions) 
+    ? assignment.form.questions 
+    : [];
+
   return (
     <div className="max-w-2xl mx-auto py-10">
       <h2 className="text-2xl font-bold mb-6">{assignment.form.title}</h2>
       <p className="mb-6 text-muted-foreground">{assignment.form.description}</p>
-      <AppraisalForm
-        questions={assignment.form.questions}
-        onSubmit={async (answers) => {
+      
+      {questions.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-lg font-semibold text-gray-900 mb-2">No questions available</p>
+          <p className="text-gray-500">
+            This form doesn't have any questions configured. Please contact your administrator.
+          </p>
+        </div>
+      ) : (
+        <AppraisalForm
+          questions={questions}
+          onSubmit={async (answers) => {
           try {
             const res = await fetch(`/api/assignments/${assignmentId}/responses`, {
               method: "POST",
@@ -55,11 +69,12 @@ export default function AssignmentReviewPage() {
             }
             toast.success("Response submitted successfully!");
             router.push("/assignments");
-          } catch (e) {
-            if (e instanceof Error) toast.error(e.message || "Something went wrong");
-          }
-        }}
-      />
+                      } catch (e) {
+              if (e instanceof Error) toast.error(e.message || "Something went wrong");
+            }
+          }}
+        />
+      )}
     </div>
   );
 } 

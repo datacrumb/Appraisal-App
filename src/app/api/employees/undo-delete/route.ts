@@ -66,6 +66,7 @@ export async function POST(req: NextRequest) {
       message: "Employee restored successfully",
       employee: restoredEmployee
     });
+    
   } catch (error) {
     console.error("Failed to restore employee:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

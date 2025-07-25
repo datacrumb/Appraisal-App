@@ -36,30 +36,20 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Create or get the two static forms
-    const form1 = await prisma.form.upsert({
+    // Get the existing forms by ID
+    const managerForm = await prisma.form.findUnique({
       where: { id: "manager-form" },
-      update: {},
-      create: {
-        id: "manager-form",
-        title: "Manager Assessment Form",
-        description: "Form for manager evaluations",
-        questions: {}, // Empty JSON for now
-        createdBy: userId,
-      },
     });
 
-    const form2 = await prisma.form.upsert({
+    const employeeForm = await prisma.form.findUnique({
       where: { id: "employee-form" },
-      update: {},
-      create: {
-        id: "employee-form",
-        title: "Employee Performance Form",
-        description: "Form for employee performance reviews",
-        questions: {}, // Empty JSON for now
-        createdBy: userId,
-      },
     });
+
+    if (!managerForm || !employeeForm) {
+      return NextResponse.json({ 
+        error: "Please create both Manager and Employee forms first in the Forms Management page" 
+      }, { status: 400 });
+    }
 
     const assignments = [];
 
@@ -73,18 +63,18 @@ export async function POST(req: NextRequest) {
     }
 
     for (const manager of managers) {
-      // Assign Form1 to manager
+      // Assign Manager Form to manager
       const managerAssignment = await prisma.assignment.upsert({
         where: {
-          id: `manager-${manager.id}-${form1.id}`,
+          id: `manager-${manager.id}-${managerForm.id}`,
         },
         update: {
           assignedAt: new Date(),
         },
         create: {
-          id: `manager-${manager.id}-${form1.id}`,
+          id: `manager-${manager.id}-${managerForm.id}`,
           employeeId: manager.id,
-          formId: form1.id,
+          formId: managerForm.id,
           employeeEmail: manager.email,
           assignedAt: new Date(),
         },
@@ -107,18 +97,18 @@ export async function POST(req: NextRequest) {
           continue;
         }
         
-        // Assign Form2 to employees under this manager
+        // Assign Employee Form to employees under this manager
         const employeeAssignment = await prisma.assignment.upsert({
           where: {
-            id: `employee-${employee.id}-${form2.id}`,
+            id: `employee-${employee.id}-${employeeForm.id}`,
           },
           update: {
             assignedAt: new Date(),
           },
           create: {
-            id: `employee-${employee.id}-${form2.id}`,
+            id: `employee-${employee.id}-${employeeForm.id}`,
             employeeId: employee.id,
-            formId: form2.id,
+            formId: employeeForm.id,
             employeeEmail: employee.email,
             assignedAt: new Date(),
           },

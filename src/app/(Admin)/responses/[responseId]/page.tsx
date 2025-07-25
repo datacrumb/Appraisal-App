@@ -10,7 +10,7 @@ interface Response {
     employeeEmail: string;
     form: {
       title: string;
-      questions: { label: string; type: string }[];
+      questions: any; // Can be object or array
     };
   };
 }
@@ -35,13 +35,18 @@ const AdminResponseDetailPage = () => {
   if (loading) return <div>Loading response...</div>;
   if (!response) return <div>Response not found.</div>;
 
+  // Ensure questions is always an array
+  const questions = Array.isArray(response.assignment.form.questions) 
+    ? response.assignment.form.questions 
+    : [];
+
   return (
     <div className="max-w-2xl mx-auto py-10">
       <h2 className="text-2xl font-bold mb-4">{response.assignment.form.title}</h2>
       <div className="mb-2 text-muted-foreground">Employee: {response.assignment.employeeEmail}</div>
       <div className="mb-2 text-xs text-gray-500">Submitted: {new Date(response.createdAt).toLocaleString()}</div>
       <div className="mt-6 space-y-4">
-        {response.assignment.form.questions.map((q, idx) => (
+        {questions.map((q, idx) => (
           <div key={idx} className="border-b pb-2">
             <div className="font-medium">{q.label}</div>
             <div className="mt-1 text-gray-700 whitespace-pre-line">
