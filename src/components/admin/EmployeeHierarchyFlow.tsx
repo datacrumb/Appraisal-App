@@ -13,7 +13,13 @@ import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, FileText, CheckCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Employee {
   id: string;
@@ -115,6 +121,8 @@ export default function EmployeeHierarchyFlow() {
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string } | null>(null);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+  const [assigningForms, setAssigningForms] = useState(false);
+  const [assignmentSuccess, setAssignmentSuccess] = useState(false);
 
   // Function to recalculate layout
   const recalculateLayout = () => {
@@ -129,6 +137,39 @@ export default function EmployeeHierarchyFlow() {
           reactFlowInstance.fitView({ padding: 0.1 });
         }
       }, 100);
+    }
+  };
+
+  // Function to trigger form assignments
+  const triggerFormAssignment = async () => {
+    setAssigningForms(true);
+    setAssignmentSuccess(false);
+    
+    try {
+      const response = await fetch("/api/forms/auto-assign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to assign forms");
+      }
+
+      const result = await response.json();
+      setAssignmentSuccess(true);
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setAssignmentSuccess(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error("Form assignment failed:", error);
+      setError("Failed to assign forms. Please try again.");
+    } finally {
+      setAssigningForms(false);
     }
   };
 
@@ -423,6 +464,42 @@ export default function EmployeeHierarchyFlow() {
         >
           <RefreshCw className="h-6 w-6" />
         </Button>
+        
+        {/* Form Assignment Button */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={triggerFormAssignment}
+                disabled={assigningForms}
+                className="absolute top-4 right-4 z-10 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {assigningForms ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : assignmentSuccess ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
+                <span className="ml-2">
+                  {assigningForms ? "Assigning..." : assignmentSuccess ? "Assigned!" : "Assign Forms"}
+                </span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Automatically assign forms to managers and employees</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        
+        {/* Success Message */}
+        {assignmentSuccess && (
+          <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg">
+            Forms assigned successfully!
+          </div>
+        )}
       </ReactFlow>
     </div>
   );

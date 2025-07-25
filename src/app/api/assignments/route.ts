@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
-import { isEmployee } from "@/lib/isEmployee";
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
@@ -9,15 +8,17 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Check if user is employee
-  if (!(await isEmployee(userId))) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
-
-  const assignments = await prisma.assignment.findMany({
+  // Check if user has any assignments (more inclusive than just checking employee role)
+  const userAssignments = await prisma.assignment.findMany({
     where: { employeeId: userId },
     include: { form: true },
     orderBy: { assignedAt: "desc" },
   });
-  return NextResponse.json(assignments);
+
+  // If user has no assignments, return empty array instead of 403
+  if (userAssignments.length === 0) {
+    return NextResponse.json([]);
+  }
+
+  return NextResponse.json(userAssignments);
 }
