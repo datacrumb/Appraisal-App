@@ -12,6 +12,8 @@ import ReactFlow, {
 import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
 
 interface Employee {
   id: string;
@@ -62,39 +64,46 @@ const nodeHeight = 70;
 
 // Re-introduce dagre for robust hierarchical layout with groups
 function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
-  const dagreGraph = new dagre.graphlib.Graph({ compound: true });
+  const dagreGraph = new dagre.graphlib.Graph();
   dagreGraph.setDefaultEdgeLabel(() => ({}));
   const isHorizontal = direction === "LR";
   dagreGraph.setGraph({
     rankdir: direction,
-    ranksep: 120,
-    nodesep: 120,
+    ranksep: 150,
+    nodesep: 100,
+    edgesep: 50,
+    marginx: 50,
+    marginy: 50,
   });
 
+  // Add nodes to the graph
   nodes.forEach((node) => {
     dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-    if (node.parentNode) {
-      dagreGraph.setParent(node.id, node.parentNode);
-    }
   });
 
+  // Add edges to the graph
   edges.forEach((edge) => {
     dagreGraph.setEdge(edge.source, edge.target);
   });
 
+  // Calculate the layout
   dagre.layout(dagreGraph);
 
-  nodes.forEach((node) => {
+  // Apply the calculated positions to the nodes
+  const layoutedNodes = nodes.map((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    node.targetPosition = isHorizontal ? Position.Left : Position.Top;
-    node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
-    node.position = {
-      x: nodeWithPosition.x - nodeWidth / 2,
-      y: nodeWithPosition.y - nodeHeight / 2,
+    return {
+      ...node,
+      targetPosition: isHorizontal ? Position.Left : Position.Top,
+      sourcePosition: isHorizontal ? Position.Right : Position.Bottom,
+      position: {
+        x: nodeWithPosition.x - nodeWidth / 2,
+        y: nodeWithPosition.y - nodeHeight / 2,
+      },
     };
   });
 
-  return { nodes, edges };
+  return { nodes: layoutedNodes, edges };
 }
 
 export default function EmployeeHierarchyFlow() {
@@ -105,6 +114,23 @@ export default function EmployeeHierarchyFlow() {
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; label: string } | null>(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
+
+  // Function to recalculate layout
+  const recalculateLayout = () => {
+    if (nodes.length > 0 && edges.length > 0) {
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
+      setNodes(layoutedNodes);
+      setEdges(layoutedEdges);
+      
+      // Fit view after layout recalculation
+      setTimeout(() => {
+        if (reactFlowInstance) {
+          reactFlowInstance.fitView({ padding: 0.1 });
+        }
+      }, 100);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -139,67 +165,7 @@ export default function EmployeeHierarchyFlow() {
         // Admin gets highest priority
         roleMap[adminId] = "ADMIN";
 
-        // Assign levels to each node for org chart layout
-        const levels: Record<string, number> = {};
-        levels[adminId] = 0;
-        
-        // First, assign managers (direct children of admin)
-        employees.forEach(emp => {
-          if (roleMap[emp.id] === "MANAGER") {
-            levels[emp.id] = 1;
-          }
-        });
-        
-        // Then assign leads (direct children of managers)
-        relations.forEach(rel => {
-          if (rel.type === "MANAGER" && roleMap[rel.toId] === "LEAD") {
-            levels[rel.toId] = 2;
-          }
-        });
-        
-        // Then assign employees (direct children of leads or managers)
-        relations.forEach(rel => {
-          if (rel.type === "MANAGER" && roleMap[rel.toId] === "EMPLOYEE") {
-            levels[rel.toId] = 2;
-          } else if (rel.type === "LEAD" && roleMap[rel.toId] === "EMPLOYEE") {
-            levels[rel.toId] = 3;
-          }
-        });
-        
-        // Fallback: assign unknown to bottom level
-        employees.forEach(emp => {
-          if (levels[emp.id] === undefined) {
-            levels[emp.id] = 4;
-          }
-        });
-
-        // Group nodes by level
-        const nodesByLevel: Record<number, Employee[]> = {};
-        employees.forEach(emp => {
-          const lvl = levels[emp.id];
-          if (!nodesByLevel[lvl]) nodesByLevel[lvl] = [];
-          nodesByLevel[lvl].push(emp);
-        });
-
-        // Calculate positions for each level (banded layout)
-        const levelY = [0, 250, 500, 750, 1000]; // Increased vertical gap
-        const chartWidth = 1600; // Wider chart for more space
-        const nodeSpacing = 280; // Increased horizontal gap
-        const positions: Record<string, { x: number; y: number }> = {};
-        Object.entries(nodesByLevel).forEach(([lvlStr, emps]) => {
-          const lvl = parseInt(lvlStr);
-          const count = emps.length;
-          const totalWidth = (count - 1) * nodeSpacing;
-          const startX = (chartWidth - totalWidth) / 2;
-          emps.forEach((emp, idx) => {
-            positions[emp.id] = {
-              x: startX + idx * nodeSpacing,
-              y: levelY[lvl] || (lvl * 200),
-            };
-          });
-        });
-
-        // Map employees to nodes with calculated positions (banded layout)
+        // Map employees to nodes (without manual positioning)
         const nodes: Node[] = employees.map((emp) => {
           const role = roleMap[emp.id] || "EMPLOYEE";
           let border, background, fontWeight, iconBg;
@@ -265,7 +231,7 @@ export default function EmployeeHierarchyFlow() {
                 </div>
               ),
             },
-            position: positions[emp.id] || { x: 0, y: 0 },
+            position: { x: 0, y: 0 }, // Will be calculated by dagre
             style: {
               border,
               background,
@@ -318,8 +284,10 @@ export default function EmployeeHierarchyFlow() {
           };
         });
 
-        setNodes(nodes);
-        setEdges(edges);
+        // Apply automatic layout using dagre
+        const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
 
       } catch (e: any) {
         setError(e.message || "Unknown error");
@@ -329,6 +297,17 @@ export default function EmployeeHierarchyFlow() {
     };
     fetchData();
   }, []);
+
+  // Auto-recalculate layout when nodes or edges change significantly
+  useEffect(() => {
+    if (nodes.length > 0 && edges.length > 0 && reactFlowInstance) {
+      // Only recalculate if we have a significant change (e.g., new nodes/edges)
+      const timeoutId = setTimeout(() => {
+        reactFlowInstance.fitView({ padding: 0.1 });
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [nodes.length, edges.length, reactFlowInstance]);
 
   // Tooltip logic
   const handleNodeMouseEnter = (event: React.MouseEvent, node: Node) => {
@@ -379,6 +358,7 @@ export default function EmployeeHierarchyFlow() {
         onNodeMouseEnter={handleNodeMouseEnter}
         onNodeMouseLeave={handleNodeMouseLeave}
         onNodeClick={handleNodeClick}
+        onInit={setReactFlowInstance}
         panOnScroll
         zoomOnScroll
         panOnDrag
@@ -398,6 +378,14 @@ export default function EmployeeHierarchyFlow() {
         />
         <Controls />
         <Background />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={recalculateLayout}
+          className="absolute top-4 left-4 z-10"
+        >
+          <RefreshCw className="h-6 w-6" />
+        </Button>
       </ReactFlow>
     </div>
   );
