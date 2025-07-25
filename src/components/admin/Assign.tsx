@@ -29,7 +29,7 @@ const Assign = () => {
       setFetching(true);
       try {
         const token = await getToken();
-        const res = await fetch("/api/employees", {
+        const res = await fetch("/api/employees/hierarchy", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
