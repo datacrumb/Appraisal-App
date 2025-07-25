@@ -44,7 +44,7 @@ const HiringStatisticsCard = () => {
           {Array.from({ length: 20 }, (_, i) => (
             <div
               key={i}
-              className={`flex-1 w-2 rounded-full ${i < 12 ? 'bg-green-500' : 'bg-gray-300'
+              className={`flex-1 w-2 rounded-full ${i < 12 ? 'bg-[#10b981]' : 'bg-gray-300'
                 }`}
             />
           ))}
@@ -54,7 +54,7 @@ const HiringStatisticsCard = () => {
       {/* Legend */}
       <div className="flex items-center gap-2 sm:gap-4">
         <div className="flex items-center gap-1">
-          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
+          <div className="w-2 h-2 sm:w-3 sm:h-3 bg-[#10b981] rounded-full"></div>
           <span className="text-xs text-gray-600">Matched</span>
         </div>
         <div className="flex items-center gap-1">

@@ -6,17 +6,17 @@ const PaymentSummaryCard = () => {
     <div className="bg-cyan-700 text-white rounded-xl p-4 sm:p-6 shadow-sm">
       {/* Payment Breakdown */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-        <div className="bg-green-100 rounded-2xl p-2 sm:p-3 flex items-center justify-between">
-          <span className="text-xs sm:text-sm text-gray-800">Basic salary</span>
-          <span className="text-xs sm:text-sm font-medium text-green-800">$2.040</span>
+        <div className="bg-[#10b981] rounded-2xl p-2 sm:p-3 flex items-center justify-between">
+          <span className="text-xs sm:text-sm text-white">Basic salary</span>
+          <span className="text-xs sm:text-sm font-medium text-white">$2.040</span>
         </div>
-        <div className="bg-white rounded-2xl p-2 sm:p-3 flex items-center justify-between">
-          <span className="text-xs sm:text-sm text-gray-800">Perform</span>
-          <span className="text-xs sm:text-sm font-medium text-gray-800">$300</span>
+        <div className="bg-[#1e3a8a] rounded-2xl p-2 sm:p-3 flex items-center justify-between">
+          <span className="text-xs sm:text-sm text-white">Perform</span>
+          <span className="text-xs sm:text-sm font-medium text-white">$300</span>
         </div>
-        <div className="bg-white rounded-2xl p-2 sm:p-3 flex items-center justify-between">
-          <span className="text-xs sm:text-sm text-gray-800">Gift</span>
-          <span className="text-xs sm:text-sm font-medium text-gray-800">$200</span>
+        <div className="bg-[#9fa0a1] rounded-2xl p-2 sm:p-3 flex items-center justify-between">
+          <span className="text-xs sm:text-sm text-white">Gift</span>
+          <span className="text-xs sm:text-sm font-medium text-white">$200</span>
         </div>
       </div>
       
