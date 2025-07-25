@@ -15,7 +15,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Clock, Users, CheckCircle, UserCheck, Search } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Users, CheckCircle, Search, Save, X, Trash2 } from "lucide-react";
 
 interface OnboardingRequest {
   id: string;
@@ -55,6 +56,7 @@ interface ApprovalsListProps {
 export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsListProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [loading, setLoading] = useState<string | null>(null);
+  const [rejectLoading, setRejectLoading] = useState<string | null>(null);
   
   // Search state for employees
   const [employeeSearch, setEmployeeSearch] = useState("");
@@ -63,6 +65,10 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
   const [currentPage, setCurrentPage] = useState(1);
   const [currentEmployeePage, setCurrentEmployeePage] = useState(1);
   const itemsPerPage = 5;
+
+  // Editable employee state
+  const [editingEmployee, setEditingEmployee] = useState<string | null>(null);
+  const [editedEmployees, setEditedEmployees] = useState<Record<string, Partial<Employee>>>({});
 
   const handleApprove = async (requestId: string) => {
     setLoading(requestId);
@@ -84,6 +90,152 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
       toast.error(error.message || "An error occurred while approving the request.");
     } finally {
       setLoading(null);
+    }
+  };
+
+  const handleReject = async (requestId: string) => {
+    setRejectLoading(requestId);
+    try {
+      const response = await fetch("/api/approvals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requestId, action: "reject" }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reject request");
+      }
+
+      setRequests((prev) => prev.filter((req) => req.id !== requestId));
+      toast.success("Request rejected successfully!");
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while rejecting the request.");
+    } finally {
+      setRejectLoading(null);
+    }
+  };
+
+  const handleEditEmployee = (employeeId: string) => {
+    setEditingEmployee(employeeId);
+    const employee = allEmployees.find(emp => emp.id === employeeId);
+    if (employee) {
+      setEditedEmployees(prev => ({
+        ...prev,
+        [employeeId]: {
+          department: employee.department || "",
+          role: employee.role || "",
+          isManager: employee.isManager,
+          isLead: employee.isLead,
+        }
+      }));
+    }
+  };
+
+  const handleSaveEmployee = async (employeeId: string) => {
+    const editedData = editedEmployees[employeeId];
+    if (!editedData) return;
+
+    try {
+      const response = await fetch(`/api/employees/${employeeId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editedData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update employee");
+      }
+
+      toast.success("Employee updated successfully!");
+      setEditingEmployee(null);
+      setEditedEmployees(prev => {
+        const newState = { ...prev };
+        delete newState[employeeId];
+        return newState;
+      });
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while updating employee.");
+    }
+  };
+
+  const handleCancelEdit = (employeeId: string) => {
+    setEditingEmployee(null);
+    setEditedEmployees(prev => {
+      const newState = { ...prev };
+      delete newState[employeeId];
+      return newState;
+    });
+  };
+
+  const handleDeleteEmployee = async (employeeId: string) => {
+    const employee = allEmployees.find(emp => emp.id === employeeId);
+    const employeeName = employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email : 'Employee';
+
+    try {
+      const response = await fetch(`/api/employees/${employeeId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete employee");
+      }
+
+      const result = await response.json();
+      
+      // Store employee data for undo functionality
+      const deletedEmployeeData = result.employeeData;
+      
+      toast.success(
+        `${employeeName} deleted successfully!`,
+        {
+          description: result.deletedRelations > 0 
+            ? `Removed ${result.deletedRelations} hierarchy relations. Form responses are preserved.`
+            : "Form responses are preserved.",
+          action: {
+            label: "Undo",
+            onClick: () => handleUndoDelete(deletedEmployeeData),
+          },
+          duration: 10000, // 10 seconds to allow undo
+        }
+      );
+      
+      setEditingEmployee(null);
+      setEditedEmployees(prev => {
+        const newState = { ...prev };
+        delete newState[employeeId];
+        return newState;
+      });
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while deleting employee.");
+    }
+  };
+
+  const handleUndoDelete = async (employeeData: any) => {
+    try {
+      const response = await fetch("/api/employees/undo-delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ employeeData }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to restore employee");
+      }
+
+      const result = await response.json();
+      
+      toast.success(
+        `${employeeData.firstName || ''} ${employeeData.lastName || ''}`.trim() || employeeData.email,
+        {
+          description: "Employee restored successfully with all relations.",
+        }
+      );
+      
+      // Refresh the page to show the restored employee
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred while restoring employee.");
     }
   };
 
@@ -167,57 +319,68 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Manager</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Requested</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    <TableHead className="px-2">Employee</TableHead>
+                    <TableHead className="px-2">Department</TableHead>
+                    <TableHead className="px-2">Role</TableHead>
+                    <TableHead className="px-2">Manager</TableHead>
+                    <TableHead className="px-2">Status</TableHead>
+                    <TableHead className="px-2">Requested</TableHead>
+                    <TableHead className="px-2 text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedRequests.map((request) => (
                     <TableRow key={request.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-8 w-8">
+                      <TableCell className="px-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
                             <AvatarImage src={request.profilePictureUrl || undefined} />
                             <AvatarFallback className="text-xs">
                               {getInitials(request.firstName, request.lastName, request.email)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">
+                            <p className="font-medium text-sm">
                               {request.firstName} {request.lastName}
                             </p>
-                            <p className="text-sm text-gray-500">{request.email}</p>
+                            <p className="text-xs text-gray-500">{request.email}</p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{request.department}</TableCell>
-                      <TableCell>
+                      <TableCell className="px-2 text-sm">{request.department}</TableCell>
+                      <TableCell className="px-2">
                         <div className="flex gap-1">
-                          <Badge variant="secondary">{request.role}</Badge>
-                          {request.isManager && <Badge variant="outline">Manager</Badge>}
-                          {request.isLead && <Badge variant="outline">Lead</Badge>}
+                          <Badge variant="secondary" className="text-xs">{request.role}</Badge>
+                          {request.isManager && <Badge variant="outline" className="text-xs">Manager</Badge>}
+                          {request.isLead && <Badge variant="outline" className="text-xs">Lead</Badge>}
                         </div>
                       </TableCell>
-                      <TableCell>{request.managerEmail || 'None'}</TableCell>
-                      <TableCell>
-                        <Badge variant="destructive">Pending</Badge>
+                      <TableCell className="px-2 text-sm">{request.managerEmail || 'None'}</TableCell>
+                      <TableCell className="px-2">
+                        <Badge variant="destructive" className="text-xs">Pending</Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="px-2 text-sm">
                         {new Date(request.createdAt).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          onClick={() => handleApprove(request.id)}
-                          disabled={loading === request.id}
-                          size="sm"
-                        >
-                          {loading === request.id ? "Approving..." : "Approve"}
-                        </Button>
+                      <TableCell className="px-2 text-right">
+                        <div className="flex gap-1 justify-end">
+                          <Button
+                            onClick={() => handleApprove(request.id)}
+                            disabled={loading === request.id || rejectLoading === request.id}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {loading === request.id ? "Approving..." : "Approve"}
+                          </Button>
+                          <Button
+                            onClick={() => handleReject(request.id)}
+                            disabled={loading === request.id || rejectLoading === request.id}
+                            size="sm"
+                            variant="destructive"
+                          >
+                            {rejectLoading === request.id ? "Rejecting..." : "Reject"}
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -286,57 +449,147 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Position</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="px-2">Employee</TableHead>
+                <TableHead className="px-2">Department</TableHead>
+                <TableHead className="px-2">Role</TableHead>
+                <TableHead className="px-2">Position</TableHead>
+                <TableHead className="px-2">Joined</TableHead>
+                <TableHead className="px-2">Status</TableHead>
+                <TableHead className="px-2 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedEmployees.map((employee) => (
-                <TableRow key={employee.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={employee.profilePictureUrl || undefined} />
-                        <AvatarFallback className="text-xs">
-                          {getInitials(employee.firstName, employee.lastName, employee.email)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {employee.firstName && employee.lastName 
-                            ? `${employee.firstName} ${employee.lastName}`
-                            : employee.email
-                          }
-                        </p>
-                        <p className="text-sm text-gray-500">{employee.email}</p>
+              {paginatedEmployees.map((employee) => {
+                const isEditing = editingEmployee === employee.id;
+                const editedData = editedEmployees[employee.id] || {};
+                
+                return (
+                  <TableRow key={employee.id}>
+                    <TableCell className="px-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={employee.profilePictureUrl || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(employee.firstName, employee.lastName, employee.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {employee.firstName && employee.lastName 
+                              ? `${employee.firstName} ${employee.lastName}`
+                              : employee.email
+                            }
+                          </p>
+                          <p className="text-xs text-gray-500">{employee.email}</p>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{employee.department || 'N/A'}</TableCell>
-                  <TableCell>{employee.role || 'N/A'}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      {employee.isManager && <Badge variant="default">Manager</Badge>}
-                      {employee.isLead && <Badge variant="secondary">Lead</Badge>}
-                      {!employee.isManager && !employee.isLead && (
-                        <Badge variant="outline">Employee</Badge>
+                    </TableCell>
+                    <TableCell className="px-2">
+                      {isEditing ? (
+                        <Input
+                          value={editedData.department || ""}
+                          onChange={(e) => setEditedEmployees(prev => ({
+                            ...prev,
+                            [employee.id]: { ...prev[employee.id], department: e.target.value }
+                          }))}
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <span className="text-sm">{employee.department || 'N/A'}</span>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {new Date(employee.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default" className="bg-green-200 text-green-700">Active</Badge>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="px-2">
+                      {isEditing ? (
+                        <Input
+                          value={editedData.role || ""}
+                          onChange={(e) => setEditedEmployees(prev => ({
+                            ...prev,
+                            [employee.id]: { ...prev[employee.id], role: e.target.value }
+                          }))}
+                          className="h-7 text-sm"
+                        />
+                      ) : (
+                        <span className="text-sm">{employee.role || 'N/A'}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-2">
+                      {isEditing ? (
+                        <div className="flex gap-1">
+                          <Select
+                            value={editedData.isManager ? "manager" : editedData.isLead ? "lead" : "employee"}
+                            onValueChange={(value) => setEditedEmployees(prev => ({
+                              ...prev,
+                              [employee.id]: {
+                                ...prev[employee.id],
+                                isManager: value === "manager",
+                                isLead: value === "lead"
+                              }
+                            }))}
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="employee">Employee</SelectItem>
+                              <SelectItem value="lead">Lead</SelectItem>
+                              <SelectItem value="manager">Manager</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="flex gap-1">
+                          {employee.isManager && <Badge variant="default" className="text-xs">Manager</Badge>}
+                          {employee.isLead && <Badge variant="secondary" className="text-xs">Lead</Badge>}
+                          {!employee.isManager && !employee.isLead && (
+                            <Badge variant="outline" className="text-xs">Employee</Badge>
+                          )}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-2 text-sm">
+                      {new Date(employee.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="px-2">
+                      <Badge variant="default" className="bg-green-200 text-green-700 text-xs">Active</Badge>
+                    </TableCell>
+                                         <TableCell className="px-2 text-right">
+                       {isEditing ? (
+                         <div className="flex gap-1 justify-end">
+                           <Button
+                             onClick={() => handleDeleteEmployee(employee.id)}
+                             size="sm"
+                             variant="destructive"
+                           >
+                             <Trash2 className="h-3 w-3" />
+                           </Button>
+                           <Button
+                             onClick={() => handleSaveEmployee(employee.id)}
+                             size="sm"
+                             className="bg-green-600 hover:bg-green-700 text-white"
+                           >
+                             <Save className="h-3 w-3" />
+                           </Button>
+                           <Button
+                             onClick={() => handleCancelEdit(employee.id)}
+                             size="sm"
+                             variant="outline"
+                           >
+                             <X className="h-3 w-3" />
+                           </Button>
+                         </div>
+                       ) : (
+                         <Button
+                           onClick={() => handleEditEmployee(employee.id)}
+                           size="sm"
+                           variant="outline"
+                         >
+                           Edit
+                         </Button>
+                       )}
+                     </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </div>

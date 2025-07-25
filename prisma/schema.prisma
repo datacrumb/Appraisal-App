@@ -25,6 +25,7 @@ model Assignment {
   assignedAt    DateTime   @default(now())
   employeeEmail String
   form          Form       @relation(fields: [formId], references: [id])
+  employee      Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   responses     Response[]
   summary       Summary?
 }
@@ -62,6 +63,7 @@ model Employee {
   profilePictureUrl String?
   relationsFrom     EmployeeRelation[] @relation("FromEmployee")
   relationsTo       EmployeeRelation[] @relation("ToEmployee")
+  assignments       Assignment[]
 }
 
 model EmployeeRelation {
@@ -69,8 +71,8 @@ model EmployeeRelation {
   fromId String
   toId   String
   type   RelationType
-  from   Employee     @relation("FromEmployee", fields: [fromId], references: [id])
-  to     Employee     @relation("ToEmployee", fields: [toId], references: [id])
+  from   Employee     @relation("FromEmployee", fields: [fromId], references: [id], onDelete: Cascade)
+  to     Employee     @relation("ToEmployee", fields: [toId], references: [id], onDelete: Cascade)
 
   @@unique([fromId, toId, type])
 }
