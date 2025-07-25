@@ -364,7 +364,7 @@ export default function EmployeeHierarchyFlow() {
     setSelectedNode(node.id === selectedNode ? null : node.id);
   };
 
-  if (loading) return <div>Loading employee hierarchy...</div>;
+  if (loading) return <div className="flex text-2xl font-bold justify-center items-center">Loading employee hierarchy...</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
