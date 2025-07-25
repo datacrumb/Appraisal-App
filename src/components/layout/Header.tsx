@@ -86,9 +86,16 @@ const Header = () => {
 
       <div className="flex items-center gap-4">
         {isLoaded ? (
+          <>
           <SignedIn>
             <UserButton />
           </SignedIn>
+          <Link href="/assignments">
+            <Button variant="link">
+              Assignments
+            </Button>
+          </Link>
+          </>
         ) : (
           <SignInButton>
             <Button>Sign In</Button>
