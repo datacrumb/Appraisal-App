@@ -59,8 +59,8 @@ function getProfilePictureUrl(employee: Employee) {
   return employee.profilePictureUrl || null;
 }
 
-const nodeWidth = 220;
-const nodeHeight = 70;
+const nodeWidth = 160;
+const nodeHeight = 140;
 
 // Re-introduce dagre for robust hierarchical layout with groups
 function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
@@ -168,36 +168,41 @@ export default function EmployeeHierarchyFlow() {
         // Map employees to nodes (without manual positioning)
         const nodes: Node[] = employees.map((emp) => {
           const role = roleMap[emp.id] || "EMPLOYEE";
-          let border, background, fontWeight, iconBg;
+          let border, background, fontWeight, iconBg, textColor;
           if (role === "ADMIN") {
             border = "3px solid #0070f3";
-            background = "#e0f2ff";
+            background = "#0070f3";
             fontWeight = "bold";
-            iconBg = "#0070f3";
+            iconBg = "#0051a2";
+            textColor = "#ffffff";
           } else if (role === "MANAGER") {
-            border = "2px dashed #f59e42";
-            background = "#fffbe6";
-            iconBg = "#f59e42";
+            border = "2px solid #f59e42";
+            background = "#f59e42";
+            iconBg = "#d97706";
+            textColor = "#ffffff";
           } else if (role === "LEAD") {
             border = "2px solid #42a5f5";
-            background = "#e3f2fd";
-            iconBg = "#42a5f5";
+            background = "#42a5f5";
+            iconBg = "#1976d2";
+            textColor = "#ffffff";
           } else if (role === "COLLEAGUE") {
-            border = "2px dotted #6366f1";
-            background = "#f3f6fa";
-            iconBg = "#6366f1";
+            border = "2px solid #6366f1";
+            background = "#6366f1";
+            iconBg = "#4f46e5";
+            textColor = "#ffffff";
           } else {
-            border = "1px solid #ccc";
-            background = "#f9f9f9";
-            iconBg = "#bbb";
+            border = "1px solid #10b981";
+            background = "#10b981";
+            iconBg = "#059669";
+            textColor = "#ffffff";
           }
           // Highlight selected/hovered
           if (selectedNode === emp.id) {
-            border = "3px solid #10b981";
-            background = "#d1fae5";
+            border = "3px solid #ffffff";
+            background = role === "ADMIN" ? "#0051a2" : role === "MANAGER" ? "#d97706" : "#059669";
           } else if (hoveredNode === emp.id) {
-            border = "3px solid #6366f1";
-            background = "#eef2ff";
+            border = "3px solid #ffffff";
+            background = role === "ADMIN" ? "#0051a2" : role === "MANAGER" ? "#d97706" : "#059669";
           }
           
           const fullName = emp.firstName && emp.lastName 
@@ -208,25 +213,42 @@ export default function EmployeeHierarchyFlow() {
             id: emp.id,
             data: {
               label: (
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <Avatar className="w-10 h-10">
+                <div style={{ 
+                  display: "flex", 
+                  flexDirection: "column", 
+                  alignItems: "center", 
+                  gap: 8,
+                  padding: "12px 8px",
+                  textAlign: "center"
+                }}>
+                  <Avatar className="w-28 h-28 rounded-lg">
                     <AvatarImage 
                       src={getProfilePictureUrl(emp) || undefined} 
                       alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
                     />
                     <AvatarFallback 
-                      className="text-white font-bold text-lg"
+                      className="text-white font-bold text-xl rounded-lg"
                       style={{ backgroundColor: iconBg }}
                     >
                       {getInitials(emp.firstName, emp.lastName, emp.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ fontWeight: "bold" }}>{fullName}</span>
-                    <span style={{ fontSize: 12, color: "#888" }}>{role}</span>
-                    {emp.department && (
-                      <span style={{ fontSize: 10, color: "#aaa" }}>{emp.department}</span>
-                    )}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <span style={{ 
+                      fontWeight: "bold", 
+                      fontSize: "14px",
+                      color: textColor,
+                      marginBottom: "2px"
+                    }}>
+                      {fullName}
+                    </span>
+                    <span style={{ 
+                      fontSize: "12px", 
+                      color: textColor,
+                      fontWeight: "500"
+                    }}>
+                      {role}
+                    </span>
                   </div>
                 </div>
               ),
@@ -235,34 +257,49 @@ export default function EmployeeHierarchyFlow() {
             style: {
               border,
               background,
-              minWidth: nodeWidth,
-              minHeight: nodeHeight,
+              minWidth: 160,
+              minHeight: 140,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              borderRadius: 10,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              borderRadius: 12,
               cursor: "pointer",
-              transition: "border 0.2s, background 0.2s",
+              transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
+              padding: 0,
             },
           };
         });
 
         // Create edges from relations
         const edges: Edge[] = relations.map((rel) => {
+          // Get the source node's role to determine edge color
+          const sourceRole = roleMap[rel.fromId] || "EMPLOYEE";
           let stroke, strokeDasharray;
-          if (rel.type === "MANAGER") {
+          
+          // Use source position color for the edge
+          if (sourceRole === "ADMIN") {
             stroke = "#0070f3";
-          } else if (rel.type === "LEAD") {
+          } else if (sourceRole === "MANAGER") {
             stroke = "#f59e42";
-            strokeDasharray = "5,5";
-          } else if (rel.type === "COLLEAGUE") {
+          } else if (sourceRole === "LEAD") {
+            stroke = "#42a5f5";
+          } else if (sourceRole === "COLLEAGUE") {
             stroke = "#6366f1";
-            strokeDasharray = "2,4";
           } else {
-            stroke = "#aaa";
+            stroke = "#10b981"; // Employee color
           }
+          
+          // Keep some visual distinction for different relation types
+          if (rel.type === "MANAGER") {
+            strokeDasharray = undefined; // Solid line for manager relations
+          } else if (rel.type === "LEAD") {
+            strokeDasharray = "5,5"; // Dashed line for lead relations
+          } else if (rel.type === "COLLEAGUE") {
+            strokeDasharray = "2,4"; // Dotted line for colleague relations
+          }
+          
           return {
             id: rel.id,
             source: rel.fromId,
@@ -271,7 +308,7 @@ export default function EmployeeHierarchyFlow() {
             style: {
               stroke,
               strokeDasharray,
-              strokeWidth: 2,
+              strokeWidth: 3,
             },
             labelStyle: {
               fill: "#333",
