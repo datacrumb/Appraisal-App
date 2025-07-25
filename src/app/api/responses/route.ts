@@ -15,10 +15,26 @@ export async function GET(req: NextRequest) {
   const responses = await prisma.response.findMany({
     include: {
       assignment: {
-        include: { form: true }
+        include: { 
+          form: true,
+          employee: true
+        }
       }
     },
     orderBy: { createdAt: "desc" },
   });
-  return NextResponse.json(responses);
+
+  // Transform responses to include employee name
+  const transformedResponses = responses.map(response => ({
+    ...response,
+    assignment: {
+      ...response.assignment,
+      employeeEmail: response.assignment.employeeEmail,
+      employeeName: response.assignment.employee 
+        ? `${response.assignment.employee.firstName || ''} ${response.assignment.employee.lastName || ''}`.trim() 
+        : null
+    }
+  }));
+
+  return NextResponse.json(transformedResponses);
 } 

@@ -17,12 +17,28 @@ export async function GET(req: NextRequest, context: { params: Promise<{ respons
     where: { id: responseId },
     include: {
       assignment: {
-        include: { form: true }
+        include: { 
+          form: true,
+          employee: true
+        }
       }
     },
   });
   if (!response) {
     return NextResponse.json({ error: "Response not found" }, { status: 404 });
   }
-  return NextResponse.json(response);
+
+  // Transform response to include employee name
+  const transformedResponse = {
+    ...response,
+    assignment: {
+      ...response.assignment,
+      employeeEmail: response.assignment.employeeEmail,
+      employeeName: response.assignment.employee 
+        ? `${response.assignment.employee.firstName || ''} ${response.assignment.employee.lastName || ''}`.trim() 
+        : null
+    }
+  };
+
+  return NextResponse.json(transformedResponse);
 } 
