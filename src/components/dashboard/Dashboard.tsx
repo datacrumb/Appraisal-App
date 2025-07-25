@@ -11,14 +11,11 @@ import {
   MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Calendar } from "@/components/ui/calendar";
 import UserProfileCard from "@/components/dashboard/UserProfileCard";
 import WorkTimeCard from "@/components/dashboard/WorkTimeCard";
 import HoursWeeksCard from "@/components/dashboard/HoursWeeksCard";
 import TotalEmployeeCard from "@/components/dashboard/TotalEmployeeCard";
-import HiringStatisticsCard from "@/components/dashboard/HiringStatisticsCard";
-import PayoutSheet from "@/components/dashboard/PayoutSheet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,6 +37,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { useUser } from "@clerk/nextjs";
+import PaymentSummaryCard from "./PaymentSummaryCard";
+import PayoutCard from "./PayoutCard";
 
 const Dashboard = () => {
   const [open, setOpen] = React.useState(false)
@@ -140,7 +139,6 @@ const Dashboard = () => {
               <FileText className="w-4 h-4 mr-2" />
               Add report
             </Button>
-            <PayoutSheet />
           </div>
         </div>
 
@@ -159,13 +157,24 @@ const Dashboard = () => {
 
           {/* Middle Column: HoursWeeksCard and bottom row */}
           <div className="lg:col-span-9 space-y-4 sm:space-y-6">
-            {/* HoursWeeksCard takes full width */}
-            <HoursWeeksCard />
+            {/* HoursWeeksCard and PayoutCard side by side */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
+              <div className="lg:col-span-8">
+                <HoursWeeksCard />
+              </div>
+              <div className="lg:col-span-4">
+                <PayoutCard />
+              </div>
+            </div>
 
             {/* Bottom Row: TotalEmployeeCard and HiringStatisticsCard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              <TotalEmployeeCard />
-              <HiringStatisticsCard />
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 sm:gap-6">
+              <div className="lg:col-span-8">
+                <TotalEmployeeCard />
+              </div>
+              <div className="lg:col-span-4">
+                <PaymentSummaryCard />
+              </div>
             </div>
           </div>
         </div>

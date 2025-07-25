@@ -3,18 +3,18 @@ import { FileText, CreditCard } from "lucide-react";
 
 const PaymentSummaryCard = () => {
   return (
-    <div className="bg-cyan-700 text-white rounded-xl p-4 sm:p-6 shadow-sm">
+    <div className="bg-cyan-700 text-white rounded-xl lg:max-w-sm w-full p-4 sm:p-6 shadow-sm">
       {/* Payment Breakdown */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
-        <div className="bg-[#10b981] rounded-2xl p-2 sm:p-3 flex items-center justify-between">
+        <div className="bg-[#10b981] rounded-full px-2 sm:px-3 py-4 sm:py-4 flex items-center justify-between">
           <span className="text-xs sm:text-sm text-white">Basic salary</span>
           <span className="text-xs sm:text-sm font-medium text-white">$2.040</span>
         </div>
-        <div className="bg-[#1e3a8a] rounded-2xl p-2 sm:p-3 flex items-center justify-between">
+        <div className="bg-[#1e3a8a] rounded-full px-2 sm:px-3 py-4 sm:py-4 flex items-center justify-between">
           <span className="text-xs sm:text-sm text-white">Perform</span>
           <span className="text-xs sm:text-sm font-medium text-white">$300</span>
         </div>
-        <div className="bg-[#9fa0a1] rounded-2xl p-2 sm:p-3 flex items-center justify-between">
+        <div className="bg-[#9fa0a1] rounded-full px-2 sm:px-3 py-4 sm:py-4 flex items-center justify-between">
           <span className="text-xs sm:text-sm text-white">Gift</span>
           <span className="text-xs sm:text-sm font-medium text-white">$200</span>
         </div>
@@ -42,7 +42,7 @@ const PaymentSummaryCard = () => {
       </div>
       
       {/* Take Home Pay */}
-      <div className="border-t border-blue-700 pt-3 sm:pt-4">
+      <div className="border-t border-white pt-3 sm:pt-4">
         <p className="text-xs sm:text-sm mb-1">Take home pay</p>
         <p className="text-2xl sm:text-3xl font-bold">$2.540.00</p>
       </div>
