@@ -19,7 +19,7 @@ const adminNav = [
   { name: "Assign", href: "/assign", icon: FileText },
   { name: "Employee Hierarchy", href: "/hierarchy-graph", icon: Users },
   { name: "Responses", href: "/responses", icon: FileText },
-  { name: "Approvals", href: "/approvals", icon: FileText },
+  { name: "Employee Management", href: "/management", icon: FileText },
 ]
 
 const Header = () => {
