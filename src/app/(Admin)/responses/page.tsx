@@ -67,11 +67,11 @@ const AdminResponsesPage = () => {
         }
       }
     };
-    
+
     // Show placeholder immediately to open the sheet
     setSelectedResponse(placeholderResponse);
     setResponseLoading(true);
-    
+
     try {
       const res = await fetch(`/api/responses/${responseId}`);
       const data = await res.json();
@@ -137,12 +137,12 @@ const AdminResponsesPage = () => {
   // Filter responses based on search term
   const filteredResponses = useMemo(() => {
     if (!searchTerm.trim()) return responses;
-    
+
     return responses.filter(response => {
       const employeeName = response.assignment.employeeName || response.assignment.employeeEmail || '';
       const formTitle = response.assignment.form.title || '';
       const searchLower = searchTerm.toLowerCase();
-      
+
       return (
         employeeName.toLowerCase().includes(searchLower) ||
         formTitle.toLowerCase().includes(searchLower) ||
@@ -186,8 +186,8 @@ const AdminResponsesPage = () => {
       <div className="text-center">
         <p className="text-lg font-medium text-gray-900 mb-2">No responses found</p>
         <p className="text-gray-500">Try adjusting your search terms</p>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setSearchTerm('')}
           className="mt-4"
         >
@@ -208,7 +208,7 @@ const AdminResponsesPage = () => {
               {searchTerm ? `${filteredResponses.length} of ${responses.length} responses` : `${responses.length} responses`}
             </div>
           </div>
-          
+
           {/* Search Bar */}
           <div className="mb-4">
             {loading ? (
@@ -243,13 +243,20 @@ const AdminResponsesPage = () => {
                   {currentResponses.map((response) => (
                     <TableRow key={response.id}>
                       <TableCell className="font-medium flex items-center gap-2">
-                        <Avatar>
-                          <AvatarImage src={response.assignment.employeeProfilePictureUrl} />
-                          <AvatarFallback>
-                            {response.assignment.employeeName?.charAt(0) || response.assignment.employeeEmail?.charAt(0)}
-                          </AvatarFallback>
-                        </Avatar>
-                        {response.assignment.employeeName || response.assignment.employeeEmail}
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={response.assignment.employeeProfilePictureUrl || undefined} />
+                            <AvatarFallback className="text-xs">
+                              {response.assignment.employeeName?.charAt(0) || response.assignment.employeeEmail?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">
+                              {response.assignment.employeeName}
+                            </p>
+                            <p className="text-xs text-gray-500">{response.assignment.employeeEmail}</p>
+                          </div>
+                        </div>
                       </TableCell>
                       <TableCell>{response.assignment.form.title}</TableCell>
                       <TableCell>
@@ -282,7 +289,7 @@ const AdminResponsesPage = () => {
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
-                    <PaginationPrevious 
+                    <PaginationPrevious
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
@@ -291,11 +298,11 @@ const AdminResponsesPage = () => {
                       className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
-                  
+
                   {(() => {
                     const pages = [];
                     const maxVisiblePages = 5;
-                    
+
                     if (totalPages <= maxVisiblePages) {
                       // Show all pages if total is small
                       for (let i = 1; i <= totalPages; i++) {
@@ -328,7 +335,7 @@ const AdminResponsesPage = () => {
                         pages.push(totalPages);
                       }
                     }
-                    
+
                     return pages.map((page, index) => (
                       <PaginationItem key={index}>
                         {page === '...' ? (
@@ -348,9 +355,9 @@ const AdminResponsesPage = () => {
                       </PaginationItem>
                     ));
                   })()}
-                  
+
                   <PaginationItem>
-                    <PaginationNext 
+                    <PaginationNext
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
@@ -379,25 +386,25 @@ const AdminResponsesPage = () => {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
+
           {responseLoading ? (
             <ResponseDetailSkeleton />
           ) : (
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>{selectedResponse.assignment.form.title}</CardTitle>
-              <div className="text-sm text-muted-foreground">
-                Employee: {selectedResponse.assignment.employeeName || selectedResponse.assignment.employeeEmail}
-              </div>
-              <div className="text-xs text-gray-500">
-                Submitted: {new Date(selectedResponse.createdAt).toLocaleString()}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.isArray(selectedResponse.assignment.form.questions) 
-                  ? selectedResponse.assignment.form.questions.map((q: any, idx: number) => (
+
+            <Card>
+              <CardHeader>
+                <CardTitle>{selectedResponse.assignment.form.title}</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Employee: {selectedResponse.assignment.employeeName || selectedResponse.assignment.employeeEmail}
+                </div>
+                <div className="text-xs text-gray-500">
+                  Submitted: {new Date(selectedResponse.createdAt).toLocaleString()}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {Array.isArray(selectedResponse.assignment.form.questions)
+                    ? selectedResponse.assignment.form.questions.map((q: any, idx: number) => (
                       <div key={idx} className="border-b pb-4 last:border-b-0">
                         <div className="font-medium text-sm text-gray-700 mb-2">
                           {idx + 1}. {q.label}
@@ -409,15 +416,15 @@ const AdminResponsesPage = () => {
                         </div>
                       </div>
                     ))
-                  : (
+                    : (
                       <div className="text-center text-gray-500 py-8">
                         No questions found in this form
                       </div>
                     )
-                }
-              </div>
-            </CardContent>
-          </Card>
+                  }
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
