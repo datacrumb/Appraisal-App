@@ -33,7 +33,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ assign
   if (!parsed.success) {
     return NextResponse.json({ 
       error: "Invalid form data", 
-      details: parsed.error.errors 
+      details: parsed.error.issues 
     }, { status: 400 });
   }
 
