@@ -12,7 +12,19 @@ export async function GET(req: NextRequest) {
   // Check if user has any assignments (more inclusive than just checking employee role)
   const userAssignments = await prisma.assignment.findMany({
     where: { employeeId: userId },
-    include: { form: true },
+    include: { 
+      form: true,
+      responses: {
+        select: {
+          id: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 1
+      }
+    },
     orderBy: { assignedAt: "desc" },
   });
 
@@ -21,5 +33,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json([]);
   }
 
-  return NextResponse.json(userAssignments);
+  // Transform assignments to include response status and evaluation target
+  const transformedAssignments = userAssignments.map(assignment => ({
+    id: assignment.id,
+    form: {
+      title: assignment.form.title,
+      description: assignment.form.description,
+    },
+    assignedAt: assignment.assignedAt,
+    evaluationTarget: assignment.evaluationTarget,
+    hasResponse: assignment.responses.length > 0,
+    submittedAt: assignment.responses.length > 0 ? assignment.responses[0].createdAt : null,
+  }));
+
+  return NextResponse.json(transformedAssignments);
 }

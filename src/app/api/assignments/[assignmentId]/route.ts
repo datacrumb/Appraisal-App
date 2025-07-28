@@ -11,7 +11,19 @@ export async function GET(req: NextRequest, context: { params: Promise<{ assignm
   const { assignmentId } = await context.params;
   const assignment = await prisma.assignment.findUnique({
     where: { id: assignmentId },
-    include: { form: true },
+    include: { 
+      form: true,
+      responses: {
+        select: {
+          id: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        take: 1
+      }
+    },
   });
 
   // Only allow the assigned employee to fetch this assignment
@@ -19,5 +31,12 @@ export async function GET(req: NextRequest, context: { params: Promise<{ assignm
     return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
   }
 
-  return NextResponse.json(assignment);
+  // Transform assignment to include response status
+  const transformedAssignment = {
+    ...assignment,
+    hasResponse: assignment.responses.length > 0,
+    submittedAt: assignment.responses.length > 0 ? assignment.responses[0].createdAt : null,
+  };
+
+  return NextResponse.json(transformedAssignment);
 }
