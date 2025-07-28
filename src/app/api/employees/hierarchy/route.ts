@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
-import { isAdmin } from "@/lib/isAdmin";
 import { isEmployee } from "@/lib/isEmployee";
 
 export async function GET(req: NextRequest) {
