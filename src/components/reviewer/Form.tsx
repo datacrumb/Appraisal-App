@@ -2,6 +2,8 @@
 
 import React, { useState } from "react";
 import { useForm, FormProvider } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   FormField,
   FormItem,
@@ -19,7 +21,6 @@ interface Question {
   type: "rating" | "multiple-choice" | "text";
   options?: string[];
   section: string;
-  sectionColor: string;
 }
 
 interface AppraisalFormProps {
@@ -35,13 +36,46 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   formTitle = "Employee Performance Evaluation",
   formDescription = "Please provide honest and constructive feedback about the employee's performance. Your responses will help in their professional development and growth."
 }) => {
+  // Create dynamic Zod schema based on questions
+  const createValidationSchema = () => {
+    const schemaFields: Record<string, z.ZodString> = {};
+    
+    questions.forEach(question => {
+      let fieldSchema = z.string().min(1, `${question.label} is required`);
+      
+      if (question.type === "rating") {
+        fieldSchema = fieldSchema.refine(
+          (val) => ["1", "2", "3", "4", "5"].includes(val),
+          { message: "Please select a rating between 1 and 5" }
+        );
+      } else if (question.type === "multiple-choice" && question.options) {
+        fieldSchema = fieldSchema.refine(
+          (val) => question.options!.includes(val),
+          { message: `Please select one of the available options` }
+        );
+      }
+      
+      schemaFields[question.id] = fieldSchema;
+    });
+    
+    return z.object(schemaFields);
+  };
+
+  const validationSchema = createValidationSchema();
+  type FormData = z.infer<typeof validationSchema>;
+
   const defaultValues = questions.reduce((acc, q) => {
     acc[q.id] = "";
     return acc;
   }, {} as Record<string, string>);
 
-  const methods = useForm({ defaultValues });
-  const { handleSubmit, reset, watch } = methods;
+  const methods = useForm<FormData>({
+    defaultValues,
+    resolver: zodResolver(validationSchema),
+    mode: "onChange" // Validate on change for better UX
+  });
+  
+  const { handleSubmit, reset, watch, formState: { errors, isValid } } = methods;
   const [loading, setLoading] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
 
@@ -50,13 +84,12 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
     if (!acc[question.section]) {
       acc[question.section] = {
         name: question.section,
-        color: question.sectionColor,
         questions: []
       };
     }
     acc[question.section].questions.push(question);
     return acc;
-  }, {} as Record<string, { name: string; color: string; questions: Question[] }>);
+  }, {} as Record<string, { name: string; questions: Question[] }>);
 
   const sectionNames = Object.keys(sections);
   const currentSectionName = sectionNames[currentSection];
@@ -68,7 +101,33 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   const answeredQuestions = Object.values(watchedValues).filter(value => value !== "").length;
   const progress = (answeredQuestions / totalQuestions) * 100;
 
-  const handleFormSubmit = async (data: Record<string, string>) => {
+  // Check if current section is complete
+  const isCurrentSectionComplete = () => {
+    const currentQuestions = currentSectionData.questions;
+    const currentAnswers = watch();
+    
+    return currentQuestions.every(question => {
+      const answer = currentAnswers[question.id];
+      return answer && answer.trim() !== '';
+    });
+  };
+
+  // Check if all sections are complete
+  const isFormComplete = () => {
+    const allAnswers = watch();
+    return questions.every(question => {
+      const answer = allAnswers[question.id];
+      return answer && answer.trim() !== '';
+    });
+  };
+
+  // Check if current section is valid (no errors)
+  const isCurrentSectionValid = () => {
+    const currentQuestionIds = currentSectionData.questions.map(q => q.id);
+    return !currentQuestionIds.some(id => errors[id]);
+  };
+
+  const handleFormSubmit = async (data: FormData) => {
     setLoading(true);
     try {
       await onSubmit(data);
@@ -188,10 +247,6 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
             {/* Section Header */}
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-2">
-                <div
-                  className="w-4 h-4 rounded-full"
-                  style={{ backgroundColor: currentSectionData.color }}
-                ></div>
                 <h2 className="text-xl font-semibold text-gray-900">
                   Section {currentSection + 1}: {currentSectionData.name}
                 </h2>
@@ -224,15 +279,16 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                       <Button
                         type="button"
                         onClick={nextSection}
-                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none"
+                        disabled={!isCurrentSectionComplete() || !isCurrentSectionValid()}
+                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                       </Button>
                     ) : (
                       <Button
                         type="submit"
-                        disabled={loading}
-                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none"
+                        disabled={loading || !isValid}
+                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {loading ? "Submitting..." : "Submit"}
                       </Button>

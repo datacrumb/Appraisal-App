@@ -43,8 +43,7 @@ export default function AssignmentReviewPage() {
         label: q.label || `Question ${index + 1}`,
         type: q.type || "text",
         options: q.options || [],
-        section: q.section || "General",
-        sectionColor: q.sectionColor || "#3B82F6"
+        section: q.section || "General"
       }))
     : [];
 

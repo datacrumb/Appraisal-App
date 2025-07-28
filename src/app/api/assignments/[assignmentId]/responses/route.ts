@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prsima";
 import { z } from "zod";
 
 const responseSchema = z.object({
-  answers: z.any(), // Accept any structure for answers
+  answers: z.record(z.string(), z.string().min(1, "All fields are required")),
 });
 
 export async function POST(req: NextRequest, context: { params: Promise<{ assignmentId: string }> }): Promise<Response> {
@@ -31,7 +31,10 @@ export async function POST(req: NextRequest, context: { params: Promise<{ assign
   const body = await req.json();
   const parsed = responseSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Invalid data", details: parsed.error }, { status: 400 });
+    return NextResponse.json({ 
+      error: "Invalid form data", 
+      details: parsed.error.errors 
+    }, { status: 400 });
   }
 
   const response = await prisma.response.create({

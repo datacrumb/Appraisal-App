@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Plus, Save, Edit, Trash2, Users, UserCheck } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 interface Question {
   id: string;
@@ -14,7 +15,6 @@ interface Question {
   type: "rating" | "multiple-choice" | "text";
   options?: string[];
   section: string;
-  sectionColor: string;
 }
 
 interface Form {
@@ -42,7 +42,7 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
   }>({
     title: "",
     description: "",
-    questions: [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
+    questions: [{ id: "", label: "", type: "text", section: "" }]
   });
 
   const managerForm = forms.find(f => f.id === "manager-form");
@@ -56,35 +56,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How would you rate the overall quality of this employee's work?",
       type: "rating",
       section: "Work Quality & Execution",
-      sectionColor: "#3B82F6"
     },
     {
       id: "work_quality_2",
       label: "Does the employee consistently meet deadlines and manage time effectively?",
       type: "rating",
       section: "Work Quality & Execution",
-      sectionColor: "#3B82F6"
     },
     {
       id: "work_quality_3",
       label: "How detail-oriented is the employee in their tasks and deliverables?",
       type: "rating",
       section: "Work Quality & Execution",
-      sectionColor: "#3B82F6"
     },
     {
       id: "work_quality_4",
       label: "How well does the employee follow project guidelines and instructions?",
       type: "rating",
       section: "Work Quality & Execution",
-      sectionColor: "#3B82F6"
     },
     {
       id: "work_quality_5",
       label: "Any specific example where the employee demonstrated exceptional quality?",
       type: "text",
       section: "Work Quality & Execution",
-      sectionColor: "#3B82F6"
     },
     // Section 2: Collaboration & Communication
     {
@@ -92,35 +87,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How effectively does the employee communicate with peers and supervisors?",
       type: "rating",
       section: "Collaboration & Communication",
-      sectionColor: "#10B981"
     },
     {
       id: "collaboration_2",
       label: "Is the employee receptive to feedback and willing to make improvements?",
       type: "rating",
       section: "Collaboration & Communication",
-      sectionColor: "#10B981"
     },
     {
       id: "collaboration_3",
       label: "How well does the employee work in a team setting?",
       type: "rating",
       section: "Collaboration & Communication",
-      sectionColor: "#10B981"
     },
     {
       id: "collaboration_4",
       label: "Does the employee show respect and professionalism in their interactions?",
       type: "rating",
       section: "Collaboration & Communication",
-      sectionColor: "#10B981"
     },
     {
       id: "collaboration_5",
       label: "Any feedback regarding the employee's interpersonal skills?",
       type: "text",
       section: "Collaboration & Communication",
-      sectionColor: "#10B981"
     },
     // Section 3: Ownership & Initiative
     {
@@ -128,35 +118,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How proactive is the employee in taking on new tasks or challenges?",
       type: "rating",
       section: "Ownership & Initiative",
-      sectionColor: "#F59E0B"
     },
     {
       id: "ownership_2",
       label: "Does the employee take responsibility for their work and outcomes?",
       type: "rating",
       section: "Ownership & Initiative",
-      sectionColor: "#F59E0B"
     },
     {
       id: "ownership_3",
       label: "How would you rate the employee's ability to work independently?",
       type: "rating",
       section: "Ownership & Initiative",
-      sectionColor: "#F59E0B"
     },
     {
       id: "ownership_4",
       label: "Have they ever proposed new ideas or improvements?",
       type: "rating",
       section: "Ownership & Initiative",
-      sectionColor: "#F59E0B"
     },
     {
       id: "ownership_5",
       label: "Describe a moment where the employee showed strong ownership.",
       type: "text",
       section: "Ownership & Initiative",
-      sectionColor: "#F59E0B"
     },
     // Section 4: Growth & Potential
     {
@@ -164,35 +149,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How open is the employee to learning and self-improvement?",
       type: "rating",
       section: "Growth & Potential",
-      sectionColor: "#EF4444"
     },
     {
       id: "growth_2",
       label: "Has the employee shown growth since their last evaluation (if applicable)?",
       type: "rating",
       section: "Growth & Potential",
-      sectionColor: "#EF4444"
     },
     {
       id: "growth_3",
       label: "Would you trust the employee with more responsibilities or a leadership role?",
       type: "rating",
       section: "Growth & Potential",
-      sectionColor: "#EF4444"
     },
     {
       id: "growth_4",
       label: "What specific skills or areas should the employee focus on developing?",
       type: "text",
       section: "Growth & Potential",
-      sectionColor: "#EF4444"
     },
     {
       id: "growth_5",
       label: "Any other comments regarding the employee's future potential?",
       type: "text",
       section: "Growth & Potential",
-      sectionColor: "#EF4444"
     }
   ];
 
@@ -204,35 +184,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How effectively does the manager lead and guide their team?",
       type: "rating",
       section: "Leadership & Management",
-      sectionColor: "#3B82F6"
     },
     {
       id: "leadership_2",
       label: "Does the manager provide clear direction and expectations?",
       type: "rating",
       section: "Leadership & Management",
-      sectionColor: "#3B82F6"
     },
     {
       id: "leadership_3",
       label: "How well does the manager support team member development?",
       type: "rating",
       section: "Leadership & Management",
-      sectionColor: "#3B82F6"
     },
     {
       id: "leadership_4",
       label: "Does the manager handle conflicts and challenges effectively?",
       type: "rating",
       section: "Leadership & Management",
-      sectionColor: "#3B82F6"
     },
     {
       id: "leadership_5",
       label: "Describe a specific example of the manager's leadership effectiveness.",
       type: "text",
       section: "Leadership & Management",
-      sectionColor: "#3B82F6"
     },
     // Section 2: Communication & Feedback
     {
@@ -240,35 +215,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How clearly does the manager communicate goals and expectations?",
       type: "rating",
       section: "Communication & Feedback",
-      sectionColor: "#10B981"
     },
     {
       id: "communication_2",
       label: "Does the manager provide regular and constructive feedback?",
       type: "rating",
       section: "Communication & Feedback",
-      sectionColor: "#10B981"
     },
     {
       id: "communication_3",
       label: "How accessible is the manager to team members?",
       type: "rating",
       section: "Communication & Feedback",
-      sectionColor: "#10B981"
     },
     {
       id: "communication_4",
       label: "Does the manager listen to and consider team input?",
       type: "rating",
       section: "Communication & Feedback",
-      sectionColor: "#10B981"
     },
     {
       id: "communication_5",
       label: "Any feedback regarding the manager's communication style?",
       type: "text",
       section: "Communication & Feedback",
-      sectionColor: "#10B981"
     },
     // Section 3: Team Development
     {
@@ -276,35 +246,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How well does the manager foster a positive team environment?",
       type: "rating",
       section: "Team Development",
-      sectionColor: "#F59E0B"
     },
     {
       id: "team_dev_2",
       label: "Does the manager encourage collaboration and teamwork?",
       type: "rating",
       section: "Team Development",
-      sectionColor: "#F59E0B"
     },
     {
       id: "team_dev_3",
       label: "How effectively does the manager recognize and reward team achievements?",
       type: "rating",
       section: "Team Development",
-      sectionColor: "#F59E0B"
     },
     {
       id: "team_dev_4",
       label: "Does the manager promote professional growth opportunities?",
       type: "rating",
       section: "Team Development",
-      sectionColor: "#F59E0B"
     },
     {
       id: "team_dev_5",
       label: "Describe how the manager contributes to team success.",
       type: "text",
       section: "Team Development",
-      sectionColor: "#F59E0B"
     },
     // Section 4: Strategic Thinking
     {
@@ -312,35 +277,30 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
       label: "How well does the manager align team goals with organizational objectives?",
       type: "rating",
       section: "Strategic Thinking",
-      sectionColor: "#EF4444"
     },
     {
       id: "strategic_2",
       label: "Does the manager demonstrate forward-thinking and planning?",
       type: "rating",
       section: "Strategic Thinking",
-      sectionColor: "#EF4444"
     },
     {
       id: "strategic_3",
       label: "How effectively does the manager handle resource allocation?",
       type: "rating",
       section: "Strategic Thinking",
-      sectionColor: "#EF4444"
     },
     {
       id: "strategic_4",
       label: "What areas could the manager improve in strategic planning?",
       type: "text",
       section: "Strategic Thinking",
-      sectionColor: "#EF4444"
     },
     {
       id: "strategic_5",
       label: "Any additional comments about the manager's strategic capabilities?",
       type: "text",
       section: "Strategic Thinking",
-      sectionColor: "#EF4444"
     }
   ];
 
@@ -383,7 +343,7 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
     setFormData({
       title: form.title,
       description: form.description || "",
-      questions: Array.isArray(form.questions) ? form.questions : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
+      questions: Array.isArray(form.questions) ? form.questions : [{ id: "", label: "", type: "text", section: "" }]
     });
   };
 
@@ -416,40 +376,65 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
     setFormData({
       title: "",
       description: "",
-      questions: [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
+      questions: [{ id: "", label: "", type: "text", section: "" }]
     });
   };
 
   const addQuestion = () => {
     setFormData(prev => ({
       ...prev,
-      questions: Array.isArray(prev.questions) ? [...prev.questions, { id: "", label: "", type: "text", section: "", sectionColor: "" }] : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
+      questions: Array.isArray(prev.questions) ? [...prev.questions, { id: "", label: "", type: "text", section: "" }] : [{ id: "", label: "", type: "text", section: "" }]
     }));
   };
 
   const removeQuestion = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      questions: Array.isArray(prev.questions) ? prev.questions.filter((_, i) => i !== index) : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
+      questions: Array.isArray(prev.questions) ? prev.questions.filter((_, i) => i !== index) : [{ id: "", label: "", type: "text", section: "" }]
     }));
   };
 
-  const updateQuestion = (index: number, field: "id" | "label" | "type" | "section" | "sectionColor", value: string) => {
+  const updateQuestion = (index: number, field: "id" | "label" | "type" | "section", value: string) => {
     setFormData(prev => ({
       ...prev,
       questions: Array.isArray(prev.questions) ? prev.questions.map((q, i) => 
         i === index ? { ...q, [field]: value } : q
-      ) : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
+      ) : [{ id: "", label: "", type: "text", section: "" }]
     }));
+  };
+
+  const handleUpdateFormsWithNewQuestions = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/forms/update-default-questions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update forms");
+      }
+
+      const result = await response.json();
+      
+      // Refresh the forms list
+      const formsResponse = await fetch("/api/forms");
+      if (formsResponse.ok) {
+        const updatedForms = await formsResponse.json();
+        setForms(updatedForms);
+      }
+
+      toast.success("Forms updated with new comprehensive questions!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update forms");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderQuestionPreview = (question: Question, index: number) => (
     <div key={question.id} className="text-sm text-gray-700 p-2 bg-gray-50 rounded">
       <div className="flex items-center gap-2 mb-1">
-        <div 
-          className="w-3 h-3 rounded-full"
-          style={{ backgroundColor: question.sectionColor }}
-        ></div>
         <span className="font-medium text-xs text-gray-500">{question.section}</span>
       </div>
       <div className="font-medium">{question.label}</div>
@@ -463,28 +448,15 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Forms Management</h2>
-        <div className="flex gap-2">
-          {!managerForm && (
-            <Button 
-              onClick={() => handleCreateForm("manager")} 
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Manager Form
-            </Button>
-          )}
-          {!employeeForm && (
-            <Button 
-              onClick={() => handleCreateForm("employee")} 
-              disabled={loading}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Employee Form
-            </Button>
-          )}
-        </div>
+        <Button 
+          onClick={handleUpdateFormsWithNewQuestions}
+          disabled={loading}
+          variant="outline"
+          className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+        >
+          <UserCheck className="h-4 w-4 mr-2" />
+          Update Forms with New Questions
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -544,20 +516,16 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
                             onChange={(e) => updateQuestion(index, "label", e.target.value)}
                           />
                           <div className="grid grid-cols-2 gap-2">
-                            <select
-                              value={question.type}
-                              onChange={(e) => updateQuestion(index, "type", e.target.value)}
-                              className="border rounded p-2"
-                            >
-                              <option value="text">Text</option>
-                              <option value="rating">Rating</option>
-                              <option value="multiple-choice">Multiple Choice</option>
-                            </select>
-                            <Input
-                              placeholder="Section color (hex)"
-                              value={question.sectionColor}
-                              onChange={(e) => updateQuestion(index, "sectionColor", e.target.value)}
-                            />
+                            <Select onValueChange={(value) => updateQuestion(index, "type", value)}>
+                              <SelectTrigger className="border rounded p-2">
+                                <SelectValue placeholder="Select a type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="rating">Rating</SelectItem>
+                                <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           <Button
                             size="sm"
@@ -681,20 +649,16 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
                             onChange={(e) => updateQuestion(index, "label", e.target.value)}
                           />
                           <div className="grid grid-cols-2 gap-2">
-                            <select
-                              value={question.type}
-                              onChange={(e) => updateQuestion(index, "type", e.target.value)}
-                              className="border rounded p-2"
-                            >
-                              <option value="text">Text</option>
-                              <option value="rating">Rating</option>
-                              <option value="multiple-choice">Multiple Choice</option>
-                            </select>
-                            <Input
-                              placeholder="Section color (hex)"
-                              value={question.sectionColor}
-                              onChange={(e) => updateQuestion(index, "sectionColor", e.target.value)}
-                            />
+                            <Select onValueChange={(value) => updateQuestion(index, "type", value)}>
+                              <SelectTrigger className="border rounded p-2">
+                                <SelectValue placeholder="Select a type" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="text">Text</SelectItem>
+                                <SelectItem value="rating">Rating</SelectItem>
+                                <SelectItem value="multiple-choice">Multiple Choice</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
                           <Button
                             size="sm"
