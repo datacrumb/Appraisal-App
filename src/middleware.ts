@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from 'next/server';
 import { clerkClient, clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { isCompanyEmail } from "@/lib/emailValidation";
-import { isEmployee } from "@/lib/isEmployee";
 
 const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
@@ -15,7 +14,8 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 const isAdminRoute = createRouteMatcher(["/(Admin)(.*)", "/api/approvals(.*)"]);
-const isEmployeeRoute = createRouteMatcher(["/assignments(.*)", "/api/assignments(.*)", "/employee(.*)"]);
+
+// TODO: Add employees routes and check if user is employee
 
 export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (isPublicRoute(req)) {
@@ -53,16 +53,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (isAdminRoute(req)) {
     const homeUrl = new URL("/", req.url);
     return NextResponse.redirect(homeUrl);
-  }
-
-  // For employee routes, check if user is an employee
-  if (isEmployeeRoute(req)) {
-    const isUserEmployee = await isEmployee(userId);
-    
-    if (!isUserEmployee) {
-      const homeUrl = new URL("/", req.url);
-      return NextResponse.redirect(homeUrl);
-    }
   }
 
   // For non-admin routes, check if user is approved

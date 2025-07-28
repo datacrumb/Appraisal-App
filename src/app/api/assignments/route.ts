@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 
+// Get all assignments for a user
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) {

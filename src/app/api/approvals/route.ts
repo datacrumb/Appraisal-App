@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 import { isAdmin } from "@/lib/isAdmin";
 
+// Get all pending onboarding requests
 export async function GET() {
   const { userId } = await auth();
   if (!userId || !(await isAdmin(userId))) {
@@ -22,6 +23,7 @@ export async function GET() {
   }
 }
 
+// Approve an onboarding request
 export async function POST(request: Request) {
   const { userId } = await auth();
   if (!userId || !(await isAdmin(userId))) {
