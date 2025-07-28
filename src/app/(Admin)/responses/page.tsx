@@ -25,6 +25,13 @@ interface Response {
     employeeEmail: string;
     employeeName?: string;
     employeeProfilePictureUrl?: string;
+    evaluationTarget?: {
+      type: "MANAGER" | "EMPLOYEE" | "COLLEAGUE" | "LEAD" | "ADMIN";
+      targetId: string;
+      targetName: string;
+      targetRole: string;
+      targetDepartment: string;
+    };
     form: {
       title: string;
       questions: any;
@@ -393,10 +400,20 @@ const AdminResponsesPage = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>{selectedResponse.assignment.form.title}</CardTitle>
+                <CardTitle>
+                  {selectedResponse.assignment.evaluationTarget ? 
+                    `${selectedResponse.assignment.evaluationTarget.targetName} Performance Evaluation` : 
+                    selectedResponse.assignment.form.title
+                  }
+                </CardTitle>
                 <div className="text-sm text-muted-foreground">
                   Employee: {selectedResponse.assignment.employeeName || selectedResponse.assignment.employeeEmail}
                 </div>
+                {selectedResponse.assignment.evaluationTarget && (
+                  <div className="text-sm text-muted-foreground">
+                    {selectedResponse.assignment.evaluationTarget.targetRole} • {selectedResponse.assignment.evaluationTarget.targetDepartment}
+                  </div>
+                )}
                 <div className="text-xs text-gray-500">
                   Submitted: {new Date(selectedResponse.createdAt).toLocaleString()}
                 </div>
@@ -410,7 +427,7 @@ const AdminResponsesPage = () => {
                           {idx + 1}. {q.label}
                         </div>
                         <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-line">
-                          {selectedResponse.answers[`q${idx + 1}`] || (
+                          {selectedResponse.answers[q.id] || (
                             <span className="italic text-gray-400">No answer provided</span>
                           )}
                         </div>

@@ -53,36 +53,20 @@ export async function POST(req: NextRequest) {
 
     const assignments = [];
 
-    // Find managers (employees with isManager = true)
-    const managers = employees.filter(emp => emp.isManager);
+    // Find managers and leads
+    const managers = employees.filter(emp => emp.isManager && !emp.isLead);
+    const leads = employees.filter(emp => emp.isLead);
+    const regularEmployees = employees.filter(emp => !emp.isManager && !emp.isLead);
 
-    if (managers.length === 0) {
+    if (managers.length === 0 && leads.length === 0) {
       return NextResponse.json({ 
-        error: "No managers found to assign forms to" 
+        error: "No managers or leads found to assign forms to" 
       }, { status: 400 });
     }
 
+    // 1. MANAGER EVALUATIONS (Bottom-Up): Employees evaluate their direct manager
     for (const manager of managers) {
-      // Assign Manager Form to manager
-      const managerAssignment = await prisma.assignment.upsert({
-        where: {
-          id: `manager-${manager.id}-${managerForm.id}`,
-        },
-        update: {
-          assignedAt: new Date(),
-        },
-        create: {
-          id: `manager-${manager.id}-${managerForm.id}`,
-          employeeId: manager.id,
-          formId: managerForm.id,
-          employeeEmail: manager.email,
-          assignedAt: new Date(),
-        },
-      });
-
-      assignments.push(managerAssignment);
-
-      // Find employees under this manager
+      // Find employees who directly report to this manager
       const managerRelations = relations.filter(rel => 
         rel.fromId === manager.id && rel.type === "MANAGER"
       );
@@ -90,39 +74,232 @@ export async function POST(req: NextRequest) {
       for (const relation of managerRelations) {
         const employee = relation.to;
         
-        // Verify employee exists in Employee table
+        // Verify employee exists and is not a lead (leads don't evaluate managers)
         const employeeExists = employees.find(emp => emp.id === employee.id);
-        if (!employeeExists) {
-          console.warn(`Employee ${employee.id} not found in Employee table, skipping assignment`);
+        if (!employeeExists || employeeExists.isLead) {
           continue;
         }
         
-        // Assign Employee Form to employees under this manager
-        const employeeAssignment = await prisma.assignment.upsert({
+        // Assign Manager Form to employee (to evaluate their direct manager)
+        const managerEvaluationAssignment = await prisma.assignment.upsert({
           where: {
-            id: `employee-${employee.id}-${employeeForm.id}`,
+            id: `manager-eval-${employee.id}-${manager.id}-${managerForm.id}`,
           },
           update: {
             assignedAt: new Date(),
           },
           create: {
-            id: `employee-${employee.id}-${employeeForm.id}`,
+            id: `manager-eval-${employee.id}-${manager.id}-${managerForm.id}`,
+            employeeId: employee.id,
+            formId: managerForm.id,
+            employeeEmail: employee.email,
+            assignedAt: new Date(),
+            evaluationTarget: {
+              type: "MANAGER",
+              targetId: manager.id,
+              targetName: `${manager.firstName || ''} ${manager.lastName || ''}`.trim() || manager.email,
+              targetRole: "Manager",
+              targetDepartment: manager.department || "Unknown"
+            }
+          },
+        });
+
+        assignments.push(managerEvaluationAssignment);
+      }
+    }
+
+    // 2. LEAD EVALUATIONS (Bottom-Up): Employees evaluate their direct lead
+    for (const lead of leads) {
+      // Find employees who directly report to this lead
+      const leadRelations = relations.filter(rel => 
+        rel.fromId === lead.id && rel.type === "LEAD"
+      );
+
+      for (const relation of leadRelations) {
+        const employee = relation.to;
+        
+        // Verify employee exists and is not a manager
+        const employeeExists = employees.find(emp => emp.id === employee.id);
+        if (!employeeExists || employeeExists.isManager) {
+          continue;
+        }
+        
+        // Assign Employee Form to employee (to evaluate their direct lead)
+        const leadEvaluationAssignment = await prisma.assignment.upsert({
+          where: {
+            id: `lead-eval-${employee.id}-${lead.id}-${employeeForm.id}`,
+          },
+          update: {
+            assignedAt: new Date(),
+          },
+          create: {
+            id: `lead-eval-${employee.id}-${lead.id}-${employeeForm.id}`,
             employeeId: employee.id,
             formId: employeeForm.id,
             employeeEmail: employee.email,
             assignedAt: new Date(),
+            evaluationTarget: {
+              type: "LEAD",
+              targetId: lead.id,
+              targetName: `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.email,
+              targetRole: "Lead",
+              targetDepartment: lead.department || "Unknown"
+            }
           },
         });
 
-        assignments.push(employeeAssignment);
+        assignments.push(leadEvaluationAssignment);
       }
+    }
+
+    // 3. EMPLOYEE EVALUATIONS (Top-Down): Managers evaluate their direct reports
+    for (const manager of managers) {
+      // Find employees who directly report to this manager
+      const managerRelations = relations.filter(rel => 
+        rel.fromId === manager.id && rel.type === "MANAGER"
+      );
+
+      for (const relation of managerRelations) {
+        const employee = relation.to;
+        
+        // Verify employee exists
+        const employeeExists = employees.find(emp => emp.id === employee.id);
+        if (!employeeExists) {
+          continue;
+        }
+        
+        // Assign Employee Form to manager (to evaluate this specific employee)
+        const employeeEvaluationAssignment = await prisma.assignment.upsert({
+          where: {
+            id: `employee-eval-${manager.id}-${employee.id}-${employeeForm.id}`,
+          },
+          update: {
+            assignedAt: new Date(),
+          },
+          create: {
+            id: `employee-eval-${manager.id}-${employee.id}-${employeeForm.id}`,
+            employeeId: manager.id,
+            formId: employeeForm.id,
+            employeeEmail: manager.email,
+            assignedAt: new Date(),
+            evaluationTarget: {
+              type: "EMPLOYEE",
+              targetId: employee.id,
+              targetName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email,
+              targetRole: employee.role || "Employee",
+              targetDepartment: employee.department || "Unknown"
+            }
+          },
+        });
+
+        assignments.push(employeeEvaluationAssignment);
+      }
+    }
+
+    // 4. LEAD EVALUATIONS (Top-Down): Leads evaluate their direct reports
+    for (const lead of leads) {
+      // Find employees who directly report to this lead
+      const leadRelations = relations.filter(rel => 
+        rel.fromId === lead.id && rel.type === "LEAD"
+      );
+
+      for (const relation of leadRelations) {
+        const employee = relation.to;
+        
+        // Verify employee exists
+        const employeeExists = employees.find(emp => emp.id === employee.id);
+        if (!employeeExists) {
+          continue;
+        }
+        
+        // Assign Employee Form to lead (to evaluate this specific employee)
+        const employeeEvaluationAssignment = await prisma.assignment.upsert({
+          where: {
+            id: `employee-eval-${lead.id}-${employee.id}-${employeeForm.id}`,
+          },
+          update: {
+            assignedAt: new Date(),
+          },
+          create: {
+            id: `employee-eval-${lead.id}-${employee.id}-${employeeForm.id}`,
+            employeeId: lead.id,
+            formId: employeeForm.id,
+            employeeEmail: lead.email,
+            assignedAt: new Date(),
+            evaluationTarget: {
+              type: "EMPLOYEE",
+              targetId: employee.id,
+              targetName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email,
+              targetRole: employee.role || "Employee",
+              targetDepartment: employee.department || "Unknown"
+            }
+          },
+        });
+
+        assignments.push(employeeEvaluationAssignment);
+      }
+    }
+
+    // 5. ADMIN EVALUATIONS: Admin evaluates all positions directly under him
+    // Find all employees who directly report to admin
+    const adminRelations = relations.filter(rel => 
+      rel.fromId === admin.id && (rel.type === "MANAGER" || rel.type === "LEAD")
+    );
+
+    for (const relation of adminRelations) {
+      const employee = relation.to;
+      
+      // Verify employee exists
+      const employeeExists = employees.find(emp => emp.id === employee.id);
+      if (!employeeExists) {
+        continue;
+      }
+      
+      // Determine the role for display
+      let role = "Employee";
+      if (employeeExists.isManager && !employeeExists.isLead) {
+        role = "Manager";
+      } else if (employeeExists.isLead) {
+        role = "Lead";
+      }
+      
+      // Assign Employee Form to admin (to evaluate this employee)
+      const adminEvaluationAssignment = await prisma.assignment.upsert({
+        where: {
+          id: `admin-eval-${admin.id}-${employee.id}-${employeeForm.id}`,
+        },
+        update: {
+          assignedAt: new Date(),
+        },
+        create: {
+          id: `admin-eval-${admin.id}-${employee.id}-${employeeForm.id}`,
+          employeeId: admin.id,
+          formId: employeeForm.id,
+          employeeEmail: admin.email,
+          assignedAt: new Date(),
+          evaluationTarget: {
+            type: "EMPLOYEE",
+            targetId: employee.id,
+            targetName: `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email,
+            targetRole: role,
+            targetDepartment: employee.department || "Unknown"
+          }
+        },
+      });
+
+      assignments.push(adminEvaluationAssignment);
     }
 
     return NextResponse.json({
       success: true,
-      message: `Forms assigned successfully to ${assignments.length} employees`,
+      message: `360-degree evaluations assigned successfully to ${assignments.length} assignments`,
       assignments: assignments.length,
-      managers: managers.length,
+      breakdown: {
+        managerEvaluations: assignments.filter(a => a.id.includes('manager-eval')).length,
+        leadEvaluations: assignments.filter(a => a.id.includes('lead-eval')).length,
+        employeeEvaluations: assignments.filter(a => a.id.includes('employee-eval')).length,
+        adminEvaluations: assignments.filter(a => a.id.includes('admin-eval')).length
+      }
     });
 
   } catch (error) {

@@ -28,13 +28,21 @@ interface AppraisalFormProps {
   onSubmit: (answers: Record<string, string>) => Promise<void>;
   formTitle?: string;
   formDescription?: string;
+  evaluationTarget?: {
+    type: "MANAGER" | "EMPLOYEE" | "COLLEAGUE" | "LEAD" | "ADMIN";
+    targetId: string;
+    targetName: string;
+    targetRole: string;
+    targetDepartment: string;
+  };
 }
 
 const AppraisalForm: React.FC<AppraisalFormProps> = ({
   questions,
   onSubmit,
   formTitle = "Employee Performance Evaluation",
-  formDescription = "Please provide honest and constructive feedback about the employee's performance. Your responses will help in their professional development and growth."
+  formDescription = "Please provide honest and constructive feedback about the employee's performance. Your responses will help in their professional development and growth.",
+  evaluationTarget
 }) => {
   // Create dynamic Zod schema based on questions
   const createValidationSchema = () => {
@@ -237,8 +245,23 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
             {/* Header */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                {formTitle}
+                {evaluationTarget ? 
+                  `${evaluationTarget.targetName} Performance Evaluation` : 
+                  formTitle
+                }
               </h1>
+              {evaluationTarget && (
+                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="text-blue-900">
+                    <p className="font-semibold text-lg">
+                      {evaluationTarget.targetRole}
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      {evaluationTarget.targetDepartment}
+                    </p>
+                  </div>
+                </div>
+              )}
               <p className="text-gray-600 leading-relaxed">
                 {formDescription}
               </p>

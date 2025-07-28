@@ -19,6 +19,7 @@ const adminNav = [
   { name: "Dashboard", href: "/", icon: null },
   { name: "Forms", href: "/forms", icon: ClipboardList },
   { name: "Employee Hierarchy", href: "/hierarchy-graph", icon: Users },
+  { name: "My Assignments", href: "/assignments", icon: FileCheck },
   { name: "Responses", href: "/responses", icon: FileText },
   { name: "Employee Management", href: "/management", icon: FileText },
 ];

@@ -13,6 +13,13 @@ type Assignment = {
     description?: string;
     questions: any; // Can be object or array
   };
+  evaluationTarget?: {
+    type: "MANAGER" | "EMPLOYEE" | "COLLEAGUE" | "LEAD" | "ADMIN";
+    targetId: string;
+    targetName: string;
+    targetRole: string;
+    targetDepartment: string;
+  };
 };
 
 export default function AssignmentReviewPage() {
@@ -63,6 +70,7 @@ export default function AssignmentReviewPage() {
           questions={questions}
           formTitle={assignment.form.title}
           formDescription={assignment.form.description}
+          evaluationTarget={assignment.evaluationTarget}
           onSubmit={async (answers) => {
             try {
               const res = await fetch(`/api/assignments/${assignmentId}/responses`, {

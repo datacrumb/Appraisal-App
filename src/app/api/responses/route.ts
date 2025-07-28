@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  // Transform responses to include employee name
+  // Transform responses to include employee name and evaluation target
   const transformedResponses = responses.map(response => ({
     ...response,
     assignment: {
@@ -33,7 +33,8 @@ export async function GET(req: NextRequest) {
       employeeName: response.assignment.employee 
         ? `${response.assignment.employee.firstName || ''} ${response.assignment.employee.lastName || ''}`.trim() 
         : null,
-      employeeProfilePictureUrl: response.assignment.employee.profilePictureUrl
+      employeeProfilePictureUrl: response.assignment.employee.profilePictureUrl,
+      evaluationTarget: response.assignment.evaluationTarget
     }
   }));
 

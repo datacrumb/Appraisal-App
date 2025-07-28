@@ -24,11 +24,12 @@ export async function GET(req: NextRequest, context: { params: Promise<{ respons
       }
     },
   });
+
   if (!response) {
     return NextResponse.json({ error: "Response not found" }, { status: 404 });
   }
 
-  // Transform response to include employee name
+  // Transform response to include employee name and evaluation target
   const transformedResponse = {
     ...response,
     assignment: {
@@ -36,7 +37,9 @@ export async function GET(req: NextRequest, context: { params: Promise<{ respons
       employeeEmail: response.assignment.employeeEmail,
       employeeName: response.assignment.employee 
         ? `${response.assignment.employee.firstName || ''} ${response.assignment.employee.lastName || ''}`.trim() 
-        : null
+        : null,
+      employeeProfilePictureUrl: response.assignment.employee.profilePictureUrl,
+      evaluationTarget: response.assignment.evaluationTarget
     }
   };
 

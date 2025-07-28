@@ -19,15 +19,16 @@ model Form {
 }
 
 model Assignment {
-  id            String     @id @default(uuid())
-  formId        String
-  employeeId    String
-  assignedAt    DateTime   @default(now())
-  employeeEmail String
-  form          Form       @relation(fields: [formId], references: [id])
-  employee      Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  responses     Response[]
-  summary       Summary?
+  id              String     @id @default(uuid())
+  formId          String
+  employeeId      String
+  assignedAt      DateTime   @default(now())
+  employeeEmail   String
+  evaluationTarget Json?     // Stores context about who is being evaluated
+  form            Form       @relation(fields: [formId], references: [id])
+  employee        Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  responses       Response[]
+  summary         Summary?
 }
 
 model Response {
