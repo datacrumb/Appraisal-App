@@ -21,7 +21,13 @@ export default async function FormsPage() {
     title: form.title,
     description: form.description || undefined,
     questions: Array.isArray(form.questions) 
-      ? (form.questions as { label: string; type: string }[])
+      ? (form.questions as any[]).map((q, index) => ({
+          id: q.id || `question_${index}`,
+          label: q.label || '',
+          type: q.type || 'text',
+          options: q.options || undefined,
+          section: q.section || 'General'
+        }))
       : [],
     createdAt: form.createdAt.toISOString(),
   }));
