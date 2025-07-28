@@ -26,6 +26,7 @@ const adminNav = [
 
 const employeeNav = [
   { name: "Dashboard", href: "/", icon: Home },
+  { name: "Employee Hierarchy", href: "/hierarchy-graph", icon: Users },
   { name: "My Assignments", href: "/assignments", icon: FileCheck },
 ];
 

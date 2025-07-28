@@ -13,7 +13,13 @@ const isPublicRoute = createRouteMatcher([
   "/api/auth/check-approval(.*)",
 ]);
 
-const isAdminRoute = createRouteMatcher(["/(Admin)(.*)", "/api/approvals(.*)"]);
+const isAdminRoute = createRouteMatcher([
+  "/(Admin)(.*)", 
+  "/api/approvals(.*)",
+  "/forms(.*)",
+  "/management(.*)",
+  "/responses(.*)"
+]);
 
 // TODO: Add employees routes and check if user is employee
 

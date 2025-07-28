@@ -20,6 +20,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useUser } from "@clerk/nextjs";
 
 interface Employee {
   id: string;
@@ -123,6 +124,7 @@ export default function EmployeeHierarchyFlow() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [assigningForms, setAssigningForms] = useState(false);
   const [assignmentSuccess, setAssignmentSuccess] = useState(false);
+  const { user } = useUser();
 
   // Function to recalculate layout
   const recalculateLayout = () => {
@@ -130,7 +132,7 @@ export default function EmployeeHierarchyFlow() {
       const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
-      
+
       // Fit view after layout recalculation
       setTimeout(() => {
         if (reactFlowInstance) {
@@ -145,7 +147,7 @@ export default function EmployeeHierarchyFlow() {
     setAssigningForms(true);
     setAssignmentSuccess(false);
     setError(null);
-    
+
     try {
       const response = await fetch("/api/forms/auto-assign", {
         method: "POST",
@@ -161,16 +163,16 @@ export default function EmployeeHierarchyFlow() {
       }
 
       setAssignmentSuccess(true);
-      
+
       // Reset success message after 5 seconds
       setTimeout(() => {
         setAssignmentSuccess(false);
       }, 5000);
-      
+
     } catch (error: any) {
       console.error("Form assignment failed:", error);
       setError(error.message || "Failed to assign forms. Please try again.");
-      
+
       // Reset error after 5 seconds
       setTimeout(() => {
         setError(null);
@@ -189,7 +191,7 @@ export default function EmployeeHierarchyFlow() {
         const hierarchyRes = await fetch("/api/employees/hierarchy");
         if (!hierarchyRes.ok) throw new Error("Failed to fetch hierarchy data");
         const hierarchyData = await hierarchyRes.json();
-        
+
         const employees: Employee[] = hierarchyData.employees || [];
         const relations: Relation[] = hierarchyData.relations || [];
         const adminId: string = hierarchyData.adminId;
@@ -198,7 +200,7 @@ export default function EmployeeHierarchyFlow() {
 
         // Build role map based on employee properties and relations
         const roleMap: Record<string, string> = {};
-        
+
         // Assign roles based on employee properties
         employees.forEach(emp => {
           if (emp.isManager) {
@@ -209,7 +211,7 @@ export default function EmployeeHierarchyFlow() {
             roleMap[emp.id] = "EMPLOYEE";
           }
         });
-        
+
         // Admin gets highest priority
         roleMap[adminId] = "ADMIN";
 
@@ -252,29 +254,29 @@ export default function EmployeeHierarchyFlow() {
             border = "3px solid #ffffff";
             background = role === "ADMIN" ? "#0051a2" : role === "MANAGER" ? "#d97706" : "#059669";
           }
-          
-          const fullName = emp.firstName && emp.lastName 
-            ? `${emp.firstName} ${emp.lastName}` 
+
+          const fullName = emp.firstName && emp.lastName
+            ? `${emp.firstName} ${emp.lastName}`
             : emp.email;
-          
+
           return {
             id: emp.id,
             data: {
               label: (
-                <div style={{ 
-                  display: "flex", 
-                  flexDirection: "column", 
-                  alignItems: "center", 
+                <div style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                   gap: 8,
                   padding: "12px 8px",
                   textAlign: "center"
                 }}>
                   <Avatar className="w-28 h-28 rounded-lg">
-                    <AvatarImage 
-                      src={getProfilePictureUrl(emp) || undefined} 
+                    <AvatarImage
+                      src={getProfilePictureUrl(emp) || undefined}
                       alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
                     />
-                    <AvatarFallback 
+                    <AvatarFallback
                       className="text-white font-bold text-xl rounded-lg"
                       style={{ backgroundColor: iconBg }}
                     >
@@ -282,16 +284,16 @@ export default function EmployeeHierarchyFlow() {
                     </AvatarFallback>
                   </Avatar>
                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                    <span style={{ 
-                      fontWeight: "bold", 
+                    <span style={{
+                      fontWeight: "bold",
                       fontSize: "14px",
                       color: textColor,
                       marginBottom: "2px"
                     }}>
                       {fullName}
                     </span>
-                    <span style={{ 
-                      fontSize: "12px", 
+                    <span style={{
+                      fontSize: "12px",
                       color: textColor,
                       fontWeight: "500"
                     }}>
@@ -325,7 +327,7 @@ export default function EmployeeHierarchyFlow() {
           // Get the source node's role to determine edge color
           const sourceRole = roleMap[rel.fromId] || "EMPLOYEE";
           let stroke, strokeDasharray;
-          
+
           // Use source position color for the edge
           if (sourceRole === "ADMIN") {
             stroke = "#0070f3";
@@ -338,7 +340,7 @@ export default function EmployeeHierarchyFlow() {
           } else {
             stroke = "#10b981"; // Employee color
           }
-          
+
           // Keep some visual distinction for different relation types
           if (rel.type === "MANAGER") {
             strokeDasharray = undefined; // Solid line for manager relations
@@ -347,7 +349,7 @@ export default function EmployeeHierarchyFlow() {
           } else if (rel.type === "COLLEAGUE") {
             strokeDasharray = "2,4"; // Dotted line for colleague relations
           }
-          
+
           return {
             id: rel.id,
             source: rel.fromId,
@@ -412,6 +414,8 @@ export default function EmployeeHierarchyFlow() {
     setSelectedNode(node.id === selectedNode ? null : node.id);
   };
 
+  const admin = user?.publicMetadata?.role === "admin";
+
   if (loading) return <div className="flex text-2xl font-bold justify-center items-center">Loading employee hierarchy...</div>;
   if (error) return <div className="text-red-600">{error}</div>;
 
@@ -471,9 +475,8 @@ export default function EmployeeHierarchyFlow() {
         >
           <RefreshCw className="h-6 w-6" />
         </Button>
-        
-        {/* Form Assignment Button */}
-        <TooltipProvider>
+        {admin && (
+          < TooltipProvider >
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -505,33 +508,33 @@ export default function EmployeeHierarchyFlow() {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        
-        {/* Success Message */}
-        {assignmentSuccess && (
-          <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
-            <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4" />
-              <div>
-                <p className="font-medium">Forms Assigned Successfully!</p>
-                <p className="text-sm">Managers and employees can now access their forms in the Assignments section.</p>
-              </div>
+        )}
+      {/* Success Message */}
+      {assignmentSuccess && (
+        <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
+          <div className="flex items-center gap-2">
+            <CheckCircle className="h-4 w-4" />
+            <div>
+              <p className="font-medium">Forms Assigned Successfully!</p>
+              <p className="text-sm">Managers and employees can now access their forms in the Assignments section.</p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Error Message */}
-        {error && (
-          <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
-            <div className="flex items-center gap-2">
-              <XCircle className="h-4 w-4" />
-              <div>
-                <p className="font-medium">Assignment Failed</p>
-                <p className="text-sm">{error}</p>
-              </div>
+      {/* Error Message */}
+      {error && (
+        <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
+          <div className="flex items-center gap-2">
+            <XCircle className="h-4 w-4" />
+            <div>
+              <p className="font-medium">Assignment Failed</p>
+              <p className="text-sm">{error}</p>
             </div>
           </div>
-        )}
-      </ReactFlow>
-    </div>
+        </div>
+      )}
+    </ReactFlow>
+    </div >
   );
 }

@@ -1,4 +1,4 @@
-import EmployeeHierarchyFlow from '@/components/admin/EmployeeHierarchyFlow'
+import EmployeeHierarchyFlow from '@/components/EmployeeHierarchyFlow'
 import React from 'react'
 
 const page = () => {
@@ -7,4 +7,4 @@ const page = () => {
   )
 }
 
-export default page
+export default page 
