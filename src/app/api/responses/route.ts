@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
       employeeEmail: response.assignment.employeeEmail,
       employeeName: response.assignment.employee 
         ? `${response.assignment.employee.firstName || ''} ${response.assignment.employee.lastName || ''}`.trim() 
-        : null
+        : null,
+      employeeProfilePictureUrl: response.assignment.employee.profilePictureUrl
     }
   }));
 

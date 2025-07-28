@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Eye, X, Search } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Response {
   id: string;
@@ -23,6 +24,7 @@ interface Response {
   assignment: {
     employeeEmail: string;
     employeeName?: string;
+    employeeProfilePictureUrl?: string;
     form: {
       title: string;
       questions: any;
@@ -240,7 +242,13 @@ const AdminResponsesPage = () => {
                 <TableBody>
                   {currentResponses.map((response) => (
                     <TableRow key={response.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium flex items-center gap-2">
+                        <Avatar>
+                          <AvatarImage src={response.assignment.employeeProfilePictureUrl} />
+                          <AvatarFallback>
+                            {response.assignment.employeeName?.charAt(0) || response.assignment.employeeEmail?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
                         {response.assignment.employeeName || response.assignment.employeeEmail}
                       </TableCell>
                       <TableCell>{response.assignment.form.title}</TableCell>
