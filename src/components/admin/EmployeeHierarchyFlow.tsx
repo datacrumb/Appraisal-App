@@ -495,10 +495,10 @@ export default function EmployeeHierarchyFlow() {
                 </span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent className="max-w-xs">
+            <TooltipContent className="max-w-xs bg-cyan-700">
               <div className="space-y-2">
                 <p className="font-medium">Auto-Assign Forms</p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-200">
                   Automatically assigns Manager forms to managers and Employee forms to their direct reports based on the hierarchy.
                 </p>
               </div>

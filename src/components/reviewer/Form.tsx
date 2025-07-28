@@ -305,7 +305,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         {answeredQuestions} of {totalQuestions} questions
                       </span>
                     </div>
-                    <Progress value={progress} className="h-2" />
+                    <Progress value={progress} className="h-2 text-black" />
                   </div>
                 </form>
               </>
