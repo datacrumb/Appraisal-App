@@ -5,13 +5,19 @@ import { isAdmin } from "@/lib/isAdmin";
 import { z } from "zod";
 
 // Zod schema for validation
+const questionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  type: z.enum(["rating", "multiple-choice", "text"]),
+  options: z.array(z.string()).optional(),
+  section: z.string(),
+  sectionColor: z.string(),
+});
+
 const formUpdateSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
-  questions: z.array(z.object({
-    type: z.string(),
-    label: z.string(),
-  })),
+  questions: z.array(questionSchema),
 });
 
 export async function PATCH(

@@ -5,15 +5,20 @@ import { z } from "zod";
 import { isAdmin } from "@/lib/isAdmin";
 
 // Zod schema for validation
+const questionSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  type: z.enum(["rating", "multiple-choice", "text"]),
+  options: z.array(z.string()).optional(),
+  section: z.string(),
+  sectionColor: z.string(),
+});
+
 const formSchema = z.object({
   id: z.string().optional(),
   title: z.string().min(1),
   description: z.string().optional(),
-  questions: z.array(z.object({
-    type: z.string(),
-    label: z.string(),
-    // Add more fields as needed for your question types
-  })),
+  questions: z.array(questionSchema),
 });
 
 export async function POST(req: NextRequest) {

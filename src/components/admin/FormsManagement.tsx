@@ -8,11 +8,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { toast } from "sonner";
 import { Plus, Save, Edit, Trash2, Users, UserCheck } from "lucide-react";
 
+interface Question {
+  id: string;
+  label: string;
+  type: "rating" | "multiple-choice" | "text";
+  options?: string[];
+  section: string;
+  sectionColor: string;
+}
+
 interface Form {
   id: string;
   title: string;
   description?: string;
-  questions: { label: string; type: string }[];
+  questions: Question[];
   createdAt: string;
 }
 
@@ -26,33 +35,321 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
   const [loading, setLoading] = useState(false);
 
   // Form states
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    description: string;
+    questions: Question[];
+  }>({
     title: "",
     description: "",
-    questions: [{ label: "", type: "text" }]
+    questions: [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
   });
 
   const managerForm = forms.find(f => f.id === "manager-form");
   const employeeForm = forms.find(f => f.id === "employee-form");
 
+  // Default comprehensive questions for employee evaluation
+  const getDefaultEmployeeQuestions = (): Question[] => [
+    // Section 1: Work Quality & Execution
+    {
+      id: "work_quality_1",
+      label: "How would you rate the overall quality of this employee's work?",
+      type: "rating",
+      section: "Work Quality & Execution",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "work_quality_2",
+      label: "Does the employee consistently meet deadlines and manage time effectively?",
+      type: "rating",
+      section: "Work Quality & Execution",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "work_quality_3",
+      label: "How detail-oriented is the employee in their tasks and deliverables?",
+      type: "rating",
+      section: "Work Quality & Execution",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "work_quality_4",
+      label: "How well does the employee follow project guidelines and instructions?",
+      type: "rating",
+      section: "Work Quality & Execution",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "work_quality_5",
+      label: "Any specific example where the employee demonstrated exceptional quality?",
+      type: "text",
+      section: "Work Quality & Execution",
+      sectionColor: "#3B82F6"
+    },
+    // Section 2: Collaboration & Communication
+    {
+      id: "collaboration_1",
+      label: "How effectively does the employee communicate with peers and supervisors?",
+      type: "rating",
+      section: "Collaboration & Communication",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "collaboration_2",
+      label: "Is the employee receptive to feedback and willing to make improvements?",
+      type: "rating",
+      section: "Collaboration & Communication",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "collaboration_3",
+      label: "How well does the employee work in a team setting?",
+      type: "rating",
+      section: "Collaboration & Communication",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "collaboration_4",
+      label: "Does the employee show respect and professionalism in their interactions?",
+      type: "rating",
+      section: "Collaboration & Communication",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "collaboration_5",
+      label: "Any feedback regarding the employee's interpersonal skills?",
+      type: "text",
+      section: "Collaboration & Communication",
+      sectionColor: "#10B981"
+    },
+    // Section 3: Ownership & Initiative
+    {
+      id: "ownership_1",
+      label: "How proactive is the employee in taking on new tasks or challenges?",
+      type: "rating",
+      section: "Ownership & Initiative",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "ownership_2",
+      label: "Does the employee take responsibility for their work and outcomes?",
+      type: "rating",
+      section: "Ownership & Initiative",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "ownership_3",
+      label: "How would you rate the employee's ability to work independently?",
+      type: "rating",
+      section: "Ownership & Initiative",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "ownership_4",
+      label: "Have they ever proposed new ideas or improvements?",
+      type: "rating",
+      section: "Ownership & Initiative",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "ownership_5",
+      label: "Describe a moment where the employee showed strong ownership.",
+      type: "text",
+      section: "Ownership & Initiative",
+      sectionColor: "#F59E0B"
+    },
+    // Section 4: Growth & Potential
+    {
+      id: "growth_1",
+      label: "How open is the employee to learning and self-improvement?",
+      type: "rating",
+      section: "Growth & Potential",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "growth_2",
+      label: "Has the employee shown growth since their last evaluation (if applicable)?",
+      type: "rating",
+      section: "Growth & Potential",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "growth_3",
+      label: "Would you trust the employee with more responsibilities or a leadership role?",
+      type: "rating",
+      section: "Growth & Potential",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "growth_4",
+      label: "What specific skills or areas should the employee focus on developing?",
+      type: "text",
+      section: "Growth & Potential",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "growth_5",
+      label: "Any other comments regarding the employee's future potential?",
+      type: "text",
+      section: "Growth & Potential",
+      sectionColor: "#EF4444"
+    }
+  ];
+
+  // Default comprehensive questions for manager evaluation
+  const getDefaultManagerQuestions = (): Question[] => [
+    // Section 1: Leadership & Management
+    {
+      id: "leadership_1",
+      label: "How effectively does the manager lead and guide their team?",
+      type: "rating",
+      section: "Leadership & Management",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "leadership_2",
+      label: "Does the manager provide clear direction and expectations?",
+      type: "rating",
+      section: "Leadership & Management",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "leadership_3",
+      label: "How well does the manager support team member development?",
+      type: "rating",
+      section: "Leadership & Management",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "leadership_4",
+      label: "Does the manager handle conflicts and challenges effectively?",
+      type: "rating",
+      section: "Leadership & Management",
+      sectionColor: "#3B82F6"
+    },
+    {
+      id: "leadership_5",
+      label: "Describe a specific example of the manager's leadership effectiveness.",
+      type: "text",
+      section: "Leadership & Management",
+      sectionColor: "#3B82F6"
+    },
+    // Section 2: Communication & Feedback
+    {
+      id: "communication_1",
+      label: "How clearly does the manager communicate goals and expectations?",
+      type: "rating",
+      section: "Communication & Feedback",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "communication_2",
+      label: "Does the manager provide regular and constructive feedback?",
+      type: "rating",
+      section: "Communication & Feedback",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "communication_3",
+      label: "How accessible is the manager to team members?",
+      type: "rating",
+      section: "Communication & Feedback",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "communication_4",
+      label: "Does the manager listen to and consider team input?",
+      type: "rating",
+      section: "Communication & Feedback",
+      sectionColor: "#10B981"
+    },
+    {
+      id: "communication_5",
+      label: "Any feedback regarding the manager's communication style?",
+      type: "text",
+      section: "Communication & Feedback",
+      sectionColor: "#10B981"
+    },
+    // Section 3: Team Development
+    {
+      id: "team_dev_1",
+      label: "How well does the manager foster a positive team environment?",
+      type: "rating",
+      section: "Team Development",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "team_dev_2",
+      label: "Does the manager encourage collaboration and teamwork?",
+      type: "rating",
+      section: "Team Development",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "team_dev_3",
+      label: "How effectively does the manager recognize and reward team achievements?",
+      type: "rating",
+      section: "Team Development",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "team_dev_4",
+      label: "Does the manager promote professional growth opportunities?",
+      type: "rating",
+      section: "Team Development",
+      sectionColor: "#F59E0B"
+    },
+    {
+      id: "team_dev_5",
+      label: "Describe how the manager contributes to team success.",
+      type: "text",
+      section: "Team Development",
+      sectionColor: "#F59E0B"
+    },
+    // Section 4: Strategic Thinking
+    {
+      id: "strategic_1",
+      label: "How well does the manager align team goals with organizational objectives?",
+      type: "rating",
+      section: "Strategic Thinking",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "strategic_2",
+      label: "Does the manager demonstrate forward-thinking and planning?",
+      type: "rating",
+      section: "Strategic Thinking",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "strategic_3",
+      label: "How effectively does the manager handle resource allocation?",
+      type: "rating",
+      section: "Strategic Thinking",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "strategic_4",
+      label: "What areas could the manager improve in strategic planning?",
+      type: "text",
+      section: "Strategic Thinking",
+      sectionColor: "#EF4444"
+    },
+    {
+      id: "strategic_5",
+      label: "Any additional comments about the manager's strategic capabilities?",
+      type: "text",
+      section: "Strategic Thinking",
+      sectionColor: "#EF4444"
+    }
+  ];
+
   const handleCreateForm = async (type: "manager" | "employee") => {
     setLoading(true);
     try {
       const defaultQuestions = type === "manager" 
-        ? [
-            { label: "What are your key achievements this quarter?", type: "text" },
-            { label: "What challenges did you face and how did you overcome them?", type: "text" },
-            { label: "How do you support your team members?", type: "text" },
-            { label: "What are your goals for the next quarter?", type: "text" },
-            { label: "Additional comments or feedback:", type: "text" }
-          ]
-        : [
-            { label: "Describe your main responsibilities and achievements:", type: "text" },
-            { label: "What skills have you developed or improved?", type: "text" },
-            { label: "How do you collaborate with your team?", type: "text" },
-            { label: "What areas would you like to improve?", type: "text" },
-            { label: "Any additional comments:", type: "text" }
-          ];
+        ? getDefaultManagerQuestions()
+        : getDefaultEmployeeQuestions();
 
       const response = await fetch("/api/forms", {
         method: "POST",
@@ -61,8 +358,8 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
           id: type === "manager" ? "manager-form" : "employee-form",
           title: type === "manager" ? "Manager Assessment Form" : "Employee Performance Form",
           description: type === "manager" 
-            ? "Form for manager evaluations" 
-            : "Form for employee performance reviews",
+            ? "Comprehensive evaluation form for manager performance and leadership" 
+            : "Comprehensive evaluation form for employee performance and development",
           questions: defaultQuestions,
         }),
       });
@@ -86,7 +383,7 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
     setFormData({
       title: form.title,
       description: form.description || "",
-      questions: Array.isArray(form.questions) ? form.questions : [{ label: "", type: "text" }]
+      questions: Array.isArray(form.questions) ? form.questions : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
     });
   };
 
@@ -119,32 +416,48 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
     setFormData({
       title: "",
       description: "",
-      questions: [{ label: "", type: "text" }]
+      questions: [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
     });
   };
 
   const addQuestion = () => {
     setFormData(prev => ({
       ...prev,
-      questions: Array.isArray(prev.questions) ? [...prev.questions, { label: "", type: "text" }] : [{ label: "", type: "text" }]
+      questions: Array.isArray(prev.questions) ? [...prev.questions, { id: "", label: "", type: "text", section: "", sectionColor: "" }] : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
     }));
   };
 
   const removeQuestion = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      questions: Array.isArray(prev.questions) ? prev.questions.filter((_, i) => i !== index) : [{ label: "", type: "text" }]
+      questions: Array.isArray(prev.questions) ? prev.questions.filter((_, i) => i !== index) : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
     }));
   };
 
-  const updateQuestion = (index: number, field: "label" | "type", value: string) => {
+  const updateQuestion = (index: number, field: "id" | "label" | "type" | "section" | "sectionColor", value: string) => {
     setFormData(prev => ({
       ...prev,
       questions: Array.isArray(prev.questions) ? prev.questions.map((q, i) => 
         i === index ? { ...q, [field]: value } : q
-      ) : [{ label: "", type: "text" }]
+      ) : [{ id: "", label: "", type: "text", section: "", sectionColor: "" }]
     }));
   };
+
+  const renderQuestionPreview = (question: Question, index: number) => (
+    <div key={question.id} className="text-sm text-gray-700 p-2 bg-gray-50 rounded">
+      <div className="flex items-center gap-2 mb-1">
+        <div 
+          className="w-3 h-3 rounded-full"
+          style={{ backgroundColor: question.sectionColor }}
+        ></div>
+        <span className="font-medium text-xs text-gray-500">{question.section}</span>
+      </div>
+      <div className="font-medium">{question.label}</div>
+      <div className="text-xs text-gray-500 mt-1">
+        Type: {question.type} {question.options && `(${question.options.length} options)`}
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -183,7 +496,7 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
               Manager Assessment Form
             </CardTitle>
             <CardDescription>
-              Form for evaluating manager performance and leadership
+              Comprehensive evaluation form for manager performance and leadership
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -212,12 +525,38 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
                       </div>
                       
                       {Array.isArray(formData.questions) ? formData.questions.map((question, index) => (
-                        <div key={index} className="flex gap-2 items-start">
-                          <div className="flex-1 space-y-2">
+                        <div key={index} className="space-y-2 p-3 border rounded">
+                          <div className="grid grid-cols-2 gap-2">
                             <Input
-                              placeholder="Question label"
-                              value={question.label}
-                              onChange={(e) => updateQuestion(index, "label", e.target.value)}
+                              placeholder="Question ID"
+                              value={question.id}
+                              onChange={(e) => updateQuestion(index, "id", e.target.value)}
+                            />
+                            <Input
+                              placeholder="Section"
+                              value={question.section}
+                              onChange={(e) => updateQuestion(index, "section", e.target.value)}
+                            />
+                          </div>
+                          <Input
+                            placeholder="Question label"
+                            value={question.label}
+                            onChange={(e) => updateQuestion(index, "label", e.target.value)}
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <select
+                              value={question.type}
+                              onChange={(e) => updateQuestion(index, "type", e.target.value)}
+                              className="border rounded p-2"
+                            >
+                              <option value="text">Text</option>
+                              <option value="rating">Rating</option>
+                              <option value="multiple-choice">Multiple Choice</option>
+                            </select>
+                            <Input
+                              placeholder="Section color (hex)"
+                              value={question.sectionColor}
+                              onChange={(e) => updateQuestion(index, "sectionColor", e.target.value)}
                             />
                           </div>
                           <Button
@@ -254,12 +593,8 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
                       <h4 className="font-medium">{managerForm.title}</h4>
                       <p className="text-sm text-gray-600">{managerForm.description}</p>
                     </div>
-                    <div className="space-y-2">
-                      {Array.isArray(managerForm.questions) ? managerForm.questions.map((q, i) => (
-                        <div key={i} className="text-sm text-gray-700">
-                          {i + 1}. {q.label}
-                        </div>
-                      )) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {Array.isArray(managerForm.questions) ? managerForm.questions.map((q, i) => renderQuestionPreview(q, i)) : (
                         <div className="text-sm text-gray-500 italic">No questions configured</div>
                       )}
                     </div>
@@ -298,7 +633,7 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
               Employee Performance Form
             </CardTitle>
             <CardDescription>
-              Form for evaluating employee performance and development
+              Comprehensive evaluation form for employee performance and development
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -327,12 +662,38 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
                       </div>
                       
                       {Array.isArray(formData.questions) ? formData.questions.map((question, index) => (
-                        <div key={index} className="flex gap-2 items-start">
-                          <div className="flex-1 space-y-2">
+                        <div key={index} className="space-y-2 p-3 border rounded">
+                          <div className="grid grid-cols-2 gap-2">
                             <Input
-                              placeholder="Question label"
-                              value={question.label}
-                              onChange={(e) => updateQuestion(index, "label", e.target.value)}
+                              placeholder="Question ID"
+                              value={question.id}
+                              onChange={(e) => updateQuestion(index, "id", e.target.value)}
+                            />
+                            <Input
+                              placeholder="Section"
+                              value={question.section}
+                              onChange={(e) => updateQuestion(index, "section", e.target.value)}
+                            />
+                          </div>
+                          <Input
+                            placeholder="Question label"
+                            value={question.label}
+                            onChange={(e) => updateQuestion(index, "label", e.target.value)}
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <select
+                              value={question.type}
+                              onChange={(e) => updateQuestion(index, "type", e.target.value)}
+                              className="border rounded p-2"
+                            >
+                              <option value="text">Text</option>
+                              <option value="rating">Rating</option>
+                              <option value="multiple-choice">Multiple Choice</option>
+                            </select>
+                            <Input
+                              placeholder="Section color (hex)"
+                              value={question.sectionColor}
+                              onChange={(e) => updateQuestion(index, "sectionColor", e.target.value)}
                             />
                           </div>
                           <Button
@@ -369,12 +730,8 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
                       <h4 className="font-medium">{employeeForm.title}</h4>
                       <p className="text-sm text-gray-600">{employeeForm.description}</p>
                     </div>
-                    <div className="space-y-2">
-                      {Array.isArray(employeeForm.questions) ? employeeForm.questions.map((q, i) => (
-                        <div key={i} className="text-sm text-gray-700">
-                          {i + 1}. {q.label}
-                        </div>
-                      )) : (
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {Array.isArray(employeeForm.questions) ? employeeForm.questions.map((q, i) => renderQuestionPreview(q, i)) : (
                         <div className="text-sm text-gray-500 italic">No questions configured</div>
                       )}
                     </div>
