@@ -1,56 +1,78 @@
-import React from "react";
-import { Info, TrendingUp } from "lucide-react";
+"use client"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 const WorkTimeCard = () => {
-  return (
-    <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-3 sm:mb-4">
-        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Average work time</h3>
-        <div className="flex items-center gap-1 text-green-600 text-xs sm:text-sm">
-          <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
-          +0.5%
-        </div>
-      </div>
-      
-      <div className="flex items-baseline gap-2 mb-3 sm:mb-4">
-        <span className="text-2xl sm:text-3xl font-bold text-gray-900">46</span>
-        <span className="text-base sm:text-lg text-gray-600">hours</span>
-        <Info className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-      </div>
-      
-      {/* Line Graph */}
-      <div className="mb-3 sm:mb-4">
-        <div className="flex items-end justify-between h-16 sm:h-20 mb-2">
-          <div className="text-xs text-gray-500">10H</div>
-          <div className="text-xs text-gray-500">8H</div>
-          <div className="text-xs text-gray-500">6H</div>
-          <div className="text-xs text-gray-500">4H</div>
-        </div>
-        
-        <div className="relative h-12 sm:h-16 bg-gray-100 rounded-lg overflow-hidden">
-          {/* Line Graph */}
-          <svg className="w-full h-full" viewBox="0 0 200 60">
-            <polyline
-              points="10,50 40,45 70,35 100,30 130,25 160,20 190,15"
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="2"
-            />
-            {/* Highlighted point */}
-            <circle cx="100" cy="30" r="4" fill="#3b82f6" />
-            <circle cx="100" cy="30" r="6" fill="#3b82f6" fillOpacity="0.2" />
-          </svg>
-          
-          {/* Tooltip */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
-            8 Hours
-          </div>
-        </div>
-      </div>
-      
-      <p className="text-xs text-gray-500">Total work hours include extra hours</p>
-    </div>
-  );
-};
+  // Data matching the image: Item 1-5 with hours 18, 26, 23, 35, 36
+  const chartData = [
+    { item: "Item 1", hours: 18 },
+    { item: "Item 2", hours: 26 },
+    { item: "Item 3", hours: 23 },
+    { item: "Item 4", hours: 35 },
+    { item: "Item 5", hours: 36 },
+  ]
 
-export default WorkTimeCard; 
+  // Calculate average (7 hours as shown in image)
+  const averageHours = 7
+
+  const chartConfig = {
+    hours: {
+      label: "Hours",
+      color: "#3b82f6",
+    },
+  } satisfies ChartConfig
+
+  return (
+    <Card className="bg-slate-100 border-0 shadow-sm">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-semibold text-gray-900">Average work time</CardTitle>
+          <div className="text-2xl font-bold text-gray-900">{averageHours} Hours</div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <ChartContainer config={chartConfig} className="h-56 w-full">
+          <LineChart
+            data={chartData}
+            margin={{
+              left: 0,
+              right: 12,
+              top: 12,
+              bottom: 12,
+            }}
+          >
+            <CartesianGrid vertical={false} horizontal={true} strokeDasharray="3 3" stroke="#e5e7eb" />
+            <XAxis
+              dataKey="item"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tick={{ fontSize: 10, fill: "#6b7280" }}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              tick={{ fontSize: 10, fill: "#6b7280" }}
+              domain={[0, 40]}
+              ticks={[0, 10, 20, 30, 40]}
+              width={30}
+            />
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+            <Line
+              dataKey="hours"
+              type="linear"
+              stroke="#3b82f6"
+              strokeWidth={2}
+              dot={{ fill: "#3b82f6", strokeWidth: 2, r: 3 }}
+              activeDot={{ r: 5, stroke: "#3b82f6", strokeWidth: 2 }}
+            />
+          </LineChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default WorkTimeCard
