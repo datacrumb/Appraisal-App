@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, Users, CheckCircle, Search, Save, X, Trash2 } from "lucide-react";
+import { TableSkeleton } from "../layout/TableSkeleton";
 
 interface OnboardingRequest {
   id: string;
@@ -278,102 +279,6 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
       <Skeleton className="h-8 w-8" />
       <Skeleton className="h-8 w-8" />
       <Skeleton className="h-8 w-8" />
-    </div>
-  );
-
-  const EmployeeRowSkeleton = () => (
-    <TableRow>
-      <TableCell className="px-2">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-6 rounded-full" />
-          <div className="space-y-1">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-        </div>
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-4 w-20" />
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-4 w-24" />
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-5 w-16" />
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-4 w-16" />
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-5 w-12" />
-      </TableCell>
-      <TableCell className="px-2 text-right">
-        <Skeleton className="h-8 w-12 ml-auto" />
-      </TableCell>
-    </TableRow>
-  );
-
-  const RequestRowSkeleton = () => (
-    <TableRow>
-      <TableCell className="px-2">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-6 rounded-full" />
-          <div className="space-y-1">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
-          </div>
-        </div>
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-4 w-20" />
-      </TableCell>
-      <TableCell className="px-2">
-        <div className="flex gap-1">
-          <Skeleton className="h-5 w-16" />
-          <Skeleton className="h-5 w-12" />
-        </div>
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-4 w-16" />
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-5 w-12" />
-      </TableCell>
-      <TableCell className="px-2">
-        <Skeleton className="h-4 w-16" />
-      </TableCell>
-      <TableCell className="px-2 text-right">
-        <ActionButtonSkeleton />
-      </TableCell>
-    </TableRow>
-  );
-
-  const TableSkeleton = () => (
-    <div className="border rounded-lg">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="px-2"><Skeleton className="h-4 w-20" /></TableHead>
-            <TableHead className="px-2"><Skeleton className="h-4 w-24" /></TableHead>
-            <TableHead className="px-2"><Skeleton className="h-4 w-16" /></TableHead>
-            <TableHead className="px-2"><Skeleton className="h-4 w-20" /></TableHead>
-            <TableHead className="px-2"><Skeleton className="h-4 w-16" /></TableHead>
-            <TableHead className="px-2"><Skeleton className="h-4 w-20" /></TableHead>
-            <TableHead className="px-2 text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {[1, 2, 3, 4, 5].map((i) => (
-            <EmployeeRowSkeleton key={i} />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-
-  const SearchSkeleton = () => (
-    <div className="mb-4">
-      <Skeleton className="h-10 w-full" />
     </div>
   );
 

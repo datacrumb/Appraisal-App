@@ -20,9 +20,12 @@ import {
   Clock, 
   User,
   Building,
-  Briefcase
+  Briefcase,
+  Eye
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import ResponseViewerSheet from './ResponseViewerSheet';
+import { TableSkeleton } from './layout/TableSkeleton';
 
 // Assignment type for TypeScript
 interface Assignment {
@@ -44,8 +47,32 @@ interface Assignment {
   submittedAt?: string;
 }
 
+// Response type for viewing submitted responses
+interface Response {
+  id: string;
+  createdAt: string;
+  answers: Record<string, any>;
+  assignment: {
+    employeeEmail: string;
+    employeeName?: string;
+    employeeProfilePictureUrl?: string;
+    evaluationTarget?: {
+      type: "MANAGER" | "EMPLOYEE" | "COLLEAGUE" | "LEAD" | "ADMIN";
+      targetId: string;
+      targetName: string;
+      targetRole: string;
+      targetDepartment: string;
+    };
+    form: {
+      title: string;
+      questions: any;
+    };
+  };
+}
+
 const Assignments = () => {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [selectedResponse, setSelectedResponse] = useState<Response | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -108,70 +135,27 @@ const Assignments = () => {
     }
   };
 
-  // Skeleton component for assignments table
-  const AssignmentsSkeleton = () => (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-64" />
-        </div>
-        <Skeleton className="h-10 w-[300px]" />
-      </div>
+  const handleViewResponse = async (assignmentId: string) => {
+    setSelectedResponse({ id: assignmentId } as Response);
+  };
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-5 w-5" />
-          <Skeleton className="h-6 w-32" />
-        </div>
-        
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead><Skeleton className="h-4 w-20" /></TableHead>
-                <TableHead><Skeleton className="h-4 w-32" /></TableHead>
-                <TableHead><Skeleton className="h-4 w-24" /></TableHead>
-                <TableHead><Skeleton className="h-4 w-28" /></TableHead>
-                <TableHead><Skeleton className="h-4 w-16" /></TableHead>
-                <TableHead className="text-right"><Skeleton className="h-4 w-20 ml-auto" /></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <TableRow key={i}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Skeleton className="w-8 h-8 rounded-full" />
-                      <div className="space-y-1">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-3 w-24" />
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <Skeleton className="h-4 w-28" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                  </TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-6 w-20" /></TableCell>
-                  <TableCell className="text-right">
-                    <Skeleton className="h-8 w-16 ml-auto" />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
-    </div>
-  );
+  const handleCloseResponse = () => {
+    setSelectedResponse(null);
+  };
+
+  const fetchResponse = async (assignmentId: string): Promise<Response> => {
+    const res = await fetch(`/api/assignments/${assignmentId}/responses`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch response');
+    }
+    return res.json();
+  };
+
+
+
 
   if (loading) {
-    return <AssignmentsSkeleton />;
+    return <TableSkeleton />;
   }
 
   if (!assignments.length) {
@@ -187,112 +171,141 @@ const Assignments = () => {
   }
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Assignments</h1>
-          <p className="text-muted-foreground">
-            Review and complete your assigned appraisal forms
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search assignments..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 w-[200px] sm:w-[300px]"
-            />
+    <div className="flex flex-col lg:flex-row h-screen">
+      {/* Left side - Table */}
+      <div className={`${selectedResponse ? 'w-full lg:w-1/2' : 'w-full'} transition-all duration-300 border-r lg:border-r border-b lg:border-b-0`}>
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">My Assignments</h2>
+            <div className="text-sm text-gray-500">
+              {searchTerm ? `${filteredAssignments.length} of ${assignments.length} assignments` : `${assignments.length} assignments`}
+            </div>
           </div>
+
+          {/* Search Bar */}
+          <div className="mb-4">
+            {loading ? (
+              <Skeleton className="h-10 w-full" />
+            ) : (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search assignments..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+            )}
+          </div>
+
+          {loading ? (
+            <TableSkeleton />
+          ) : (
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Role & Department</TableHead>
+                    <TableHead>Form Type</TableHead>
+                    <TableHead>Assigned Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAssignments.map((assignment) => (
+                    <TableRow key={assignment.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
+                            {getEvaluationTypeIcon(assignment.evaluationTarget?.type)}
+                          </div>
+                          <div>
+                            <div className="font-medium">
+                              {assignment.evaluationTarget?.targetName || 'Unknown Employee'}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {assignment.evaluationTarget?.type || 'Evaluation'}
+                            </div>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="font-medium text-sm">
+                            {assignment.evaluationTarget?.targetRole || 'N/A'}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {assignment.evaluationTarget?.targetDepartment || 'N/A'}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="max-w-[200px]">
+                          <div className="font-medium text-sm truncate">
+                            {assignment.form.title}
+                          </div>
+                          {assignment.form.description && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {assignment.form.description}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-muted-foreground">
+                          {new Date(assignment.assignedAt).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(assignment.assignedAt).toLocaleTimeString()}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {getStatusBadge(assignment)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {assignment.hasResponse ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleViewResponse(assignment.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            View
+                          </Button>
+                        ) : (
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="default"
+                          >
+                            <Link href={`/assignments/${assignment.id}`}>
+                              Fill Out
+                            </Link>
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5" />
-          <h2 className="text-xl font-semibold">Assigned Forms ({filteredAssignments.length})</h2>
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Employee</TableHead>
-                <TableHead>Role & Department</TableHead>
-                <TableHead>Form Type</TableHead>
-                <TableHead>Assigned Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredAssignments.map((assignment) => (
-                <TableRow key={assignment.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
-                        {getEvaluationTypeIcon(assignment.evaluationTarget?.type)}
-                      </div>
-                      <div>
-                        <div className="font-medium">
-                          {assignment.evaluationTarget?.targetName || 'Unknown Employee'}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {assignment.evaluationTarget?.type || 'Evaluation'}
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium text-sm">
-                        {assignment.evaluationTarget?.targetRole || 'N/A'}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {assignment.evaluationTarget?.targetDepartment || 'N/A'}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="max-w-[200px]">
-                      <div className="font-medium text-sm truncate">
-                        {assignment.form.title}
-                      </div>
-                      {assignment.form.description && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {assignment.form.description}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm text-muted-foreground">
-                      {new Date(assignment.assignedAt).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(assignment.assignedAt).toLocaleTimeString()}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(assignment)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      asChild
-                      size="sm"
-                      variant={assignment.hasResponse ? "outline" : "default"}
-                    >
-                      <Link href={`/assignments/${assignment.id}`}>
-                        {assignment.hasResponse ? 'View' : 'Fill Out'}
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </div>
+      {/* Right side - Response Detail */}
+      {selectedResponse && (
+        <ResponseViewerSheet
+          isOpen={!!selectedResponse}
+          onClose={handleCloseResponse}
+          assignmentId={selectedResponse.id}
+          fetchResponse={fetchResponse}
+          title="Response Details"
+        />
+      )}
     </div>
   );
 };

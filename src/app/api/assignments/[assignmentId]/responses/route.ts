@@ -8,6 +8,65 @@ const responseSchema = z.object({
   answers: z.record(z.string(), z.string().min(1, "All fields are required")),
 });
 
+export async function GET(req: NextRequest, context: { params: Promise<{ assignmentId: string }> }): Promise<Response> {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { assignmentId } = await context.params;
+  
+  // Get the assignment with form and response data
+  const assignment = await prisma.assignment.findUnique({
+    where: { id: assignmentId },
+    include: {
+      form: true,
+      employee: true,
+      responses: {
+        where: { responderId: userId },
+        orderBy: { createdAt: 'desc' },
+        take: 1
+      }
+    }
+  });
+
+  if (!assignment) {
+    return NextResponse.json({ error: "Assignment not found" }, { status: 404 });
+  }
+
+  // Only allow the assigned employee to fetch this assignment's response
+  if (assignment.employeeId !== userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  if (assignment.responses.length === 0) {
+    return NextResponse.json({ error: "No response found for this assignment" }, { status: 404 });
+  }
+
+  const response = assignment.responses[0];
+
+  // Transform the response to match the expected format
+  const transformedResponse = {
+    id: response.id,
+    createdAt: response.createdAt,
+    answers: response.answers,
+    assignment: {
+      employeeEmail: assignment.employeeEmail,
+      employeeName: assignment.employee?.firstName && assignment.employee?.lastName 
+        ? `${assignment.employee.firstName} ${assignment.employee.lastName}` 
+        : undefined,
+      employeeProfilePictureUrl: assignment.employee?.profilePictureUrl,
+      evaluationTarget: assignment.evaluationTarget,
+      form: {
+        title: assignment.form.title,
+        questions: assignment.form.questions
+      }
+    }
+  };
+
+  return NextResponse.json(transformedResponse);
+}
+
 export async function POST(req: NextRequest, context: { params: Promise<{ assignmentId: string }> }): Promise<Response> {
   const { userId } = await auth();
   if (!userId) {

@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -14,8 +13,9 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Eye, X, Search } from "lucide-react";
+import { Eye, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ResponseViewerSheet from "@/components/ResponseViewerSheet";
 
 interface Response {
   id: string;
@@ -43,7 +43,6 @@ const AdminResponsesPage = () => {
   const [responses, setResponses] = useState<Response[]>([]);
   const [selectedResponse, setSelectedResponse] = useState<Response | null>(null);
   const [loading, setLoading] = useState(true);
-  const [responseLoading, setResponseLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -60,38 +59,19 @@ const AdminResponsesPage = () => {
   }, []);
 
   const handleViewResponse = async (responseId: string) => {
-    // Create a placeholder response to keep the sheet open
-    const placeholderResponse: Response = {
-      id: responseId,
-      createdAt: new Date().toISOString(),
-      answers: {},
-      assignment: {
-        employeeEmail: 'Loading...',
-        employeeName: 'Loading...',
-        form: {
-          title: 'Loading...',
-          questions: []
-        }
-      }
-    };
-
-    // Show placeholder immediately to open the sheet
-    setSelectedResponse(placeholderResponse);
-    setResponseLoading(true);
-
-    try {
-      const res = await fetch(`/api/responses/${responseId}`);
-      const data = await res.json();
-      setSelectedResponse(data);
-    } catch (error) {
-      console.error('Failed to fetch response:', error);
-    } finally {
-      setResponseLoading(false);
-    }
+    setSelectedResponse({ id: responseId } as Response);
   };
 
   const handleCloseResponse = () => {
     setSelectedResponse(null);
+  };
+
+  const fetchResponse = async (responseId: string): Promise<Response> => {
+    const res = await fetch(`/api/responses/${responseId}`);
+    if (!res.ok) {
+      throw new Error('Failed to fetch response');
+    }
+    return res.json();
   };
 
   // Skeleton component for table loading
@@ -120,26 +100,7 @@ const AdminResponsesPage = () => {
     </div>
   );
 
-  // Skeleton component for response detail loading
-  const ResponseDetailSkeleton = () => (
-    <Card>
-      <CardHeader>
-        <Skeleton className="h-6 w-3/4 mb-2" />
-        <Skeleton className="h-4 w-1/2 mb-1" />
-        <Skeleton className="h-3 w-1/3" />
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="border-b pb-4 last:border-b-0">
-              <Skeleton className="h-4 w-full mb-2" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
+
 
   // Filter responses based on search term
   const filteredResponses = useMemo(() => {
@@ -274,7 +235,6 @@ const AdminResponsesPage = () => {
                           variant="outline"
                           size="sm"
                           onClick={() => handleViewResponse(response.id)}
-                          disabled={responseLoading}
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View
@@ -382,68 +342,13 @@ const AdminResponsesPage = () => {
 
       {/* Right side - Response Detail */}
       {selectedResponse && (
-        <div className="w-full lg:w-1/2 p-6 overflow-y-auto">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-xl font-bold">Response Details</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCloseResponse}
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-
-          {responseLoading ? (
-            <ResponseDetailSkeleton />
-          ) : (
-
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {selectedResponse.assignment.evaluationTarget ? 
-                    `${selectedResponse.assignment.evaluationTarget.targetName} Performance Evaluation` : 
-                    selectedResponse.assignment.form.title
-                  }
-                </CardTitle>
-                <div className="text-sm text-muted-foreground">
-                  Employee: {selectedResponse.assignment.employeeName || selectedResponse.assignment.employeeEmail}
-                </div>
-                {selectedResponse.assignment.evaluationTarget && (
-                  <div className="text-sm text-muted-foreground">
-                    {selectedResponse.assignment.evaluationTarget.targetRole} • {selectedResponse.assignment.evaluationTarget.targetDepartment}
-                  </div>
-                )}
-                <div className="text-xs text-gray-500">
-                  Submitted: {new Date(selectedResponse.createdAt).toLocaleString()}
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {Array.isArray(selectedResponse.assignment.form.questions)
-                    ? selectedResponse.assignment.form.questions.map((q: any, idx: number) => (
-                      <div key={idx} className="border-b pb-4 last:border-b-0">
-                        <div className="font-medium text-sm text-gray-700 mb-2">
-                          {idx + 1}. {q.label}
-                        </div>
-                        <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded-md whitespace-pre-line">
-                          {selectedResponse.answers[q.id] || (
-                            <span className="italic text-gray-400">No answer provided</span>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                    : (
-                      <div className="text-center text-gray-500 py-8">
-                        No questions found in this form
-                      </div>
-                    )
-                  }
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <ResponseViewerSheet
+          isOpen={!!selectedResponse}
+          onClose={handleCloseResponse}
+          responseId={selectedResponse.id}
+          fetchResponse={fetchResponse}
+          title="Response Details"
+        />
       )}
     </div>
   );
