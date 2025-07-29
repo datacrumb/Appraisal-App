@@ -1,4 +1,4 @@
-import Assignments from '@/components/reviewer/Assignments'
+import Assignments from '@/components/Assignments'
 import React from 'react'
 
 const page = () => {

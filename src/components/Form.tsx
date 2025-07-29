@@ -41,16 +41,16 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   questions,
   onSubmit,
   formTitle = "Employee Performance Evaluation",
-  formDescription = "Please provide honest and constructive feedback about the employee's performance. Your responses will help in their professional development and growth.",
+  formDescription = "Evaluate the employees overall effectiveness in thier role, including the quality and consistency of their work, ability to meet deadlines, ownership of tasks, and contribution to team goals.",
   evaluationTarget
 }) => {
   // Create dynamic Zod schema based on questions
   const createValidationSchema = () => {
     const schemaFields: Record<string, z.ZodString> = {};
-    
+
     questions.forEach(question => {
       let fieldSchema = z.string().min(1, `${question.label} is required`);
-      
+
       if (question.type === "rating") {
         fieldSchema = fieldSchema.refine(
           (val) => ["1", "2", "3", "4", "5"].includes(val),
@@ -62,10 +62,10 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
           { message: `Please select one of the available options` }
         );
       }
-      
+
       schemaFields[question.id] = fieldSchema;
     });
-    
+
     return z.object(schemaFields);
   };
 
@@ -82,7 +82,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
     resolver: zodResolver(validationSchema),
     mode: "onChange" // Validate on change for better UX
   });
-  
+
   const { handleSubmit, reset, watch, formState: { errors, isValid } } = methods;
   const [loading, setLoading] = useState(false);
   const [currentSection, setCurrentSection] = useState(0);
@@ -113,7 +113,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   const isCurrentSectionComplete = () => {
     const currentQuestions = currentSectionData.questions;
     const currentAnswers = watch();
-    
+
     return currentQuestions.every(question => {
       const answer = currentAnswers[question.id];
       return answer && answer.trim() !== '';
@@ -179,8 +179,8 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         type="button"
                         variant={field.value === rating.toString() ? "default" : "outline"}
                         className={`w-12 h-12 rounded-none ${field.value === rating.toString()
-                            ? "bg-gray-900 text-white border-gray-900"
-                            : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                          ? "bg-gray-900 text-white border-gray-900"
+                          : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => field.onChange(rating.toString())}
                       >
@@ -198,8 +198,8 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         type="button"
                         variant={field.value === option ? "default" : "outline"}
                         className={`justify-start h-auto p-3 rounded-none ${field.value === option
-                            ? "bg-gray-900 text-white border-gray-900"
-                            : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                          ? "bg-gray-900 text-white border-gray-900"
+                          : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                           }`}
                         onClick={() => field.onChange(option)}
                       >
@@ -212,7 +212,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                 {question.type === "text" && (
                   <textarea
                     {...field}
-                    className="w-full min-h-[80px] border border-gray-300 rounded-md p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
+                    className="w-full min-h-[80px] border border-gray-300 rounded-none p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
                     placeholder="Your answer..."
                     disabled={loading}
                   />
@@ -230,7 +230,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
     <div className="bg-gray-50">
       <div className="flex">
         {/* Left side - Background image placeholder */}
-        <div className="hidden lg:block lg:w-2/5 bg-gradient-to-br from-blue-50 to-indigo-100 relative">
+        <div className="hidden md:block md:w-2/5 lg:w-2/5 relative">
           <Image
             src="/images/FormPage.jpg"
             alt="Background"
@@ -240,29 +240,26 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
         </div>
 
         {/* Right side - Form */}
-        <div className="w-full lg:w-3/5 bg-white">
+        <div className="relative w-full lg:w-3/5 bg-white overflow-hidden">
+
+          {/* Background image - hidden on small devices */}
+          <div className="absolute top-0 h-32" style={{ left: '-40%', width: '200%', height: '180px', backgroundImage: `url('/images/waves.png')`, backgroundPosition: 'center', backgroundSize: 'cover' }}/>
+
           <div className="max-w-2xl mx-auto p-8">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                {evaluationTarget ? 
-                  `${evaluationTarget.targetName} Performance Evaluation` : 
-                  formTitle
-                }
-              </h1>
-              {evaluationTarget && (
-                <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="text-blue-900">
-                    <p className="font-semibold text-lg">
-                      {evaluationTarget.targetRole}
-                    </p>
-                    <p className="text-sm text-blue-700">
-                      {evaluationTarget.targetDepartment}
-                    </p>
+                {evaluationTarget && (
+                  <div className="flex items-center justify-between mb-5">
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {evaluationTarget.targetName}
+                    </h1>
+                    <div className="flex space-x-2 text-3xl font-bold text-blue-500">
+                      <p>{evaluationTarget.targetRole}</p>
+                      <p>{evaluationTarget.targetDepartment}</p>
+                    </div>
                   </div>
-                </div>
-              )}
-              <p className="text-gray-600 leading-relaxed">
+                )}
+              <p className="text-black leading-relaxed">
                 {formDescription}
               </p>
             </div>
@@ -297,7 +294,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                     >
                       Previous
                     </Button>
-                    
+
                     {currentSection < sectionNames.length - 1 ? (
                       <Button
                         type="button"
@@ -338,6 +335,6 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
       </div>
     </div>
   );
-};
+};  
 
 export default AppraisalForm;

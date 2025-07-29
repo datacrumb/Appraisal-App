@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import AppraisalForm from "@/components/reviewer/Form";
+import AppraisalForm from "@/components/Form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 

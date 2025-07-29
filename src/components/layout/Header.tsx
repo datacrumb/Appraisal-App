@@ -71,12 +71,12 @@ const Header = () => {
         {isLoaded && !employeeLoading && (isAdmin || isEmployee) && (
           <>
             {/* Desktop Navigation - Hidden on small screens */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2">
               <NavigationLinks />
             </div>
             
             {/* Mobile Navigation - Sheet */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="md:hidden">
@@ -99,9 +99,14 @@ const Header = () => {
 
       <div className="flex items-center gap-4">
         {isLoaded ? (
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
+          <>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-md">Welcome, {user?.firstName}</h1>
+            </div>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
+          </>
         ) : (
           <SignInButton>
             <Button>Sign In</Button>

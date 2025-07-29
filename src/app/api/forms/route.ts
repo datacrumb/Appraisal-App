@@ -11,7 +11,7 @@ const questionSchema = z.object({
   type: z.enum(["rating", "multiple-choice", "text"]),
   options: z.array(z.string()).optional(),
   section: z.string(),
-  sectionColor: z.string(),
+  sectionColor: z.string().optional(),
 });
 
 const formSchema = z.object({
