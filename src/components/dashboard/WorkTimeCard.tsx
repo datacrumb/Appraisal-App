@@ -19,7 +19,7 @@ const WorkTimeCard = () => {
   const chartConfig = {
     hours: {
       label: "Hours",
-      color: "#3b82f6",
+      color: "#6b7280",
     },
   } satisfies ChartConfig
 

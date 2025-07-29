@@ -178,7 +178,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         key={`${question.id}-rating-${rating}`}
                         type="button"
                         variant={field.value === rating.toString() ? "default" : "outline"}
-                        className={`w-12 h-12 rounded-none ${field.value === rating.toString()
+                        className={`w-12 h-12 rounded-none hover:cursor-pointer ${field.value === rating.toString()
                           ? "bg-gray-900 text-white border-gray-900"
                           : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                           }`}
@@ -197,7 +197,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         key={`${question.id}-option-${index}`}
                         type="button"
                         variant={field.value === option ? "default" : "outline"}
-                        className={`justify-start h-auto p-3 rounded-none ${field.value === option
+                        className={`justify-start h-auto p-3 rounded-none hover:cursor-pointer ${field.value === option
                           ? "bg-gray-900 text-white border-gray-900"
                           : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                           }`}
@@ -300,7 +300,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         type="button"
                         onClick={nextSection}
                         disabled={!isCurrentSectionComplete() || !isCurrentSectionValid()}
-                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                       </Button>
