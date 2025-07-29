@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth, clerkClient } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prsima";
 import { isEmployee } from "@/lib/isEmployee";
+import { isAdmin } from "@/lib/isAdmin";
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
@@ -10,8 +11,29 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Get admin ID (you might want to store this in environment or determine differently)
-    const adminId = userId; // For now, using current user as admin
+    // Find the actual admin in the system
+    let adminId: string | null = null;
+    
+    // Get all employees and find the one with admin role
+    const allEmployees = await prisma.employee.findMany();
+    
+    for (const employee of allEmployees) {
+      try {
+        const client = await clerkClient();
+        const user = await client.users.getUser(employee.id);
+        if (user.publicMetadata.role === "admin") {
+          adminId = employee.id;
+          break;
+        }
+      } catch (error) {
+        console.error(`Error checking admin status for ${employee.id}:`, error);
+      }
+    }
+    
+    // If no admin found, return error
+    if (!adminId) {
+      return NextResponse.json({ error: "No admin found in the system" }, { status: 404 });
+    }
 
     // Fetch all employees with their relations
     const employees = await prisma.employee.findMany({
