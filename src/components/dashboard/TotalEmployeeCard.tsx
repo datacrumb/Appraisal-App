@@ -22,9 +22,13 @@ interface EmployeeStats {
   [key: string]: number;
 }
 
-const TotalEmployeeCard = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [loading, setLoading] = useState(true);
+interface TotalEmployeeCardProps {
+  initialEmployees?: Employee[];
+}
+
+const TotalEmployeeCard = ({ initialEmployees }: TotalEmployeeCardProps) => {
+  const [employees, setEmployees] = useState<Employee[]>(initialEmployees || []);
+  const [loading, setLoading] = useState(!initialEmployees);
   const [error, setError] = useState<string | null>(null);
 
   // Color mapping for different categories - matching the image colors
@@ -34,6 +38,13 @@ const TotalEmployeeCard = () => {
   };
 
   useEffect(() => {
+    // Only fetch if we don't have initial data
+    if (initialEmployees) {
+      setEmployees(initialEmployees);
+      setLoading(false);
+      return;
+    }
+
     const fetchEmployees = async () => {
       try {
         setLoading(true);
@@ -53,7 +64,7 @@ const TotalEmployeeCard = () => {
     };
 
     fetchEmployees();
-  }, []);
+  }, [initialEmployees]);
 
   // Calculate employee statistics by department/role
   const calculateEmployeeStats = (): { chartData: any[], totalMembers: number, stats: EmployeeStats } => {

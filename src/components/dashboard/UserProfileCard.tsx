@@ -7,24 +7,35 @@ import { Button } from "@/components/ui/button";
 interface UserProfile {
   id: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  department: string;
-  role: string;
+  firstName: string | null;
+  lastName: string | null;
+  department: string | null;
+  role: string | null;
   isManager: boolean;
   isLead: boolean;
   profilePictureUrl: string | null;
-  yearsOfExperience: number;
-  createdAt: string;
-  status?: string;
+  yearsOfExperience: number | null;
+  createdAt: string | null;
+  status?: string | null;
 }
 
-const UserProfileCard = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+interface UserProfileCardProps {
+  initialProfile?: UserProfile | null;
+}
+
+const UserProfileCard = ({ initialProfile }: UserProfileCardProps) => {
+  const [profile, setProfile] = useState<UserProfile | null>(initialProfile || null);
+  const [loading, setLoading] = useState(!initialProfile);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Only fetch if we don't have initial data
+    if (initialProfile) {
+      setProfile(initialProfile);
+      setLoading(false);
+      return;
+    }
+
     const fetchProfile = async () => {
       try {
         setLoading(true);
@@ -44,7 +55,7 @@ const UserProfileCard = () => {
     };
 
     fetchProfile();
-  }, []);
+  }, [initialProfile]);
 
   // Loading state
   if (loading) {
