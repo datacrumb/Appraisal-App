@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Response {
   id: string;
@@ -32,7 +33,25 @@ const AdminResponseDetailPage = () => {
       .catch(() => setLoading(false));
   }, [responseId]);
 
-  if (loading) return <div>Loading response...</div>;
+  // Skeleton component for response loading
+  const ResponseSkeleton = () => (
+    <div className="max-w-2xl mx-auto py-10">
+      <Skeleton className="h-8 w-3/4 mb-4" />
+      <Skeleton className="h-4 w-1/2 mb-2" />
+      <Skeleton className="h-3 w-1/3 mb-6" />
+      
+      <div className="mt-6 space-y-4">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="border-b pb-2">
+            <Skeleton className="h-5 w-3/4 mb-2" />
+            <Skeleton className="h-16 w-full" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  if (loading) return <ResponseSkeleton />;
   if (!response) return <div>Response not found.</div>;
 
   // Ensure questions is always an array

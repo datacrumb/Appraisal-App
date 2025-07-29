@@ -446,7 +446,7 @@ export function FormsManagement({ initialForms }: FormsManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex-col md:flex-row space-y-2 justify-between items-center">
         <h2 className="text-2xl font-bold">Forms Management</h2>
         <Button 
           onClick={handleUpdateFormsWithNewQuestions}

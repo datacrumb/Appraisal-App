@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, Users, CheckCircle, Search, Save, X, Trash2 } from "lucide-react";
 
 interface OnboardingRequest {
@@ -53,10 +54,13 @@ interface ApprovalsListProps {
   allEmployees: Employee[];
 }
 
-export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsListProps) {
+export function EmployeeManagement({ initialRequests, allEmployees: initialAllEmployees }: ApprovalsListProps) {
   const [requests, setRequests] = useState(initialRequests);
+  const [allEmployees, setAllEmployees] = useState(initialAllEmployees);
   const [loading, setLoading] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState<string | null>(null);
+  const [saveLoading, setSaveLoading] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
   
   // Search state for employees
   const [employeeSearch, setEmployeeSearch] = useState("");
@@ -136,6 +140,7 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
     const editedData = editedEmployees[employeeId];
     if (!editedData) return;
 
+    setSaveLoading(employeeId);
     try {
       const response = await fetch(`/api/employees/${employeeId}`, {
         method: "PATCH",
@@ -156,6 +161,8 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
       });
     } catch (error: any) {
       toast.error(error.message || "An error occurred while updating employee.");
+    } finally {
+      setSaveLoading(null);
     }
   };
 
@@ -172,6 +179,7 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
     const employee = allEmployees.find(emp => emp.id === employeeId);
     const employeeName = employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email : 'Employee';
 
+    setDeleteLoading(employeeId);
     try {
       const response = await fetch(`/api/employees/${employeeId}`, {
         method: "DELETE",
@@ -208,6 +216,8 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
       });
     } catch (error: any) {
       toast.error(error.message || "An error occurred while deleting employee.");
+    } finally {
+      setDeleteLoading(null);
     }
   };
 
@@ -254,6 +264,118 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
       .join("")
       .slice(0, 2);
   };
+
+  // Skeleton components for loading states
+  const ActionButtonSkeleton = () => (
+    <div className="flex gap-1 justify-end">
+      <Skeleton className="h-8 w-16" />
+      <Skeleton className="h-8 w-16" />
+    </div>
+  );
+
+  const EmployeeActionSkeleton = () => (
+    <div className="flex gap-1 justify-end">
+      <Skeleton className="h-8 w-8" />
+      <Skeleton className="h-8 w-8" />
+      <Skeleton className="h-8 w-8" />
+    </div>
+  );
+
+  const EmployeeRowSkeleton = () => (
+    <TableRow>
+      <TableCell className="px-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-4 w-20" />
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-4 w-24" />
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-5 w-16" />
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-4 w-16" />
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-5 w-12" />
+      </TableCell>
+      <TableCell className="px-2 text-right">
+        <Skeleton className="h-8 w-12 ml-auto" />
+      </TableCell>
+    </TableRow>
+  );
+
+  const RequestRowSkeleton = () => (
+    <TableRow>
+      <TableCell className="px-2">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-6 rounded-full" />
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-24" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-4 w-20" />
+      </TableCell>
+      <TableCell className="px-2">
+        <div className="flex gap-1">
+          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-5 w-12" />
+        </div>
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-4 w-16" />
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-5 w-12" />
+      </TableCell>
+      <TableCell className="px-2">
+        <Skeleton className="h-4 w-16" />
+      </TableCell>
+      <TableCell className="px-2 text-right">
+        <ActionButtonSkeleton />
+      </TableCell>
+    </TableRow>
+  );
+
+  const TableSkeleton = () => (
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="px-2"><Skeleton className="h-4 w-20" /></TableHead>
+            <TableHead className="px-2"><Skeleton className="h-4 w-24" /></TableHead>
+            <TableHead className="px-2"><Skeleton className="h-4 w-16" /></TableHead>
+            <TableHead className="px-2"><Skeleton className="h-4 w-20" /></TableHead>
+            <TableHead className="px-2"><Skeleton className="h-4 w-16" /></TableHead>
+            <TableHead className="px-2"><Skeleton className="h-4 w-20" /></TableHead>
+            <TableHead className="px-2 text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <EmployeeRowSkeleton key={i} />
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
+  const SearchSkeleton = () => (
+    <div className="mb-4">
+      <Skeleton className="h-10 w-full" />
+    </div>
+  );
 
   // Filter employees based on search
   const filteredEmployees = useMemo(() => {
@@ -363,24 +485,28 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
                         {new Date(request.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="px-2 text-right">
-                        <div className="flex gap-1 justify-end">
-                          <Button
-                            onClick={() => handleApprove(request.id)}
-                            disabled={loading === request.id || rejectLoading === request.id}
-                            size="sm"
-                            className="bg-green-600 hover:bg-green-700 text-white"
-                          >
-                            {loading === request.id ? "Approving..." : "Approve"}
-                          </Button>
-                          <Button
-                            onClick={() => handleReject(request.id)}
-                            disabled={loading === request.id || rejectLoading === request.id}
-                            size="sm"
-                            variant="destructive"
-                          >
-                            {rejectLoading === request.id ? "Rejecting..." : "Reject"}
-                          </Button>
-                        </div>
+                        {(loading === request.id || rejectLoading === request.id) ? (
+                          <ActionButtonSkeleton />
+                        ) : (
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              onClick={() => handleApprove(request.id)}
+                              disabled={loading === request.id || rejectLoading === request.id}
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              onClick={() => handleReject(request.id)}
+                              disabled={loading === request.id || rejectLoading === request.id}
+                              size="sm"
+                              variant="destructive"
+                            >
+                              Reject
+                            </Button>
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -445,7 +571,10 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
           </div>
         </div>
 
-        <div className="border rounded-lg">
+        {(saveLoading || deleteLoading) ? (
+          <TableSkeleton />
+        ) : (
+          <div className="border rounded-lg">
           <Table>
             <TableHeader>
               <TableRow>
@@ -553,10 +682,13 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
                       <Badge variant="default" className="bg-green-200 text-green-700 text-xs">Active</Badge>
                     </TableCell>
                                          <TableCell className="px-2 text-right">
-                       {isEditing ? (
+                       {(saveLoading === employee.id || deleteLoading === employee.id) ? (
+                         <EmployeeActionSkeleton />
+                       ) : isEditing ? (
                          <div className="flex gap-1 justify-end">
                            <Button
                              onClick={() => handleDeleteEmployee(employee.id)}
+                             disabled={saveLoading === employee.id || deleteLoading === employee.id}
                              size="sm"
                              variant="destructive"
                            >
@@ -564,6 +696,7 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
                            </Button>
                            <Button
                              onClick={() => handleSaveEmployee(employee.id)}
+                             disabled={saveLoading === employee.id || deleteLoading === employee.id}
                              size="sm"
                              className="bg-green-600 hover:bg-green-700 text-white"
                            >
@@ -571,6 +704,7 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
                            </Button>
                            <Button
                              onClick={() => handleCancelEdit(employee.id)}
+                             disabled={saveLoading === employee.id || deleteLoading === employee.id}
                              size="sm"
                              variant="outline"
                            >
@@ -593,6 +727,7 @@ export function EmployeeManagement({ initialRequests, allEmployees }: ApprovalsL
             </TableBody>
           </Table>
         </div>
+        )}
 
         {/* Pagination for Employees */}
         {totalEmployeePages > 1 && (

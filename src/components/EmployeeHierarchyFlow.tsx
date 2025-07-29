@@ -13,6 +13,7 @@ import dagre from "dagre";
 import "reactflow/dist/style.css";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { RefreshCw, FileText, CheckCircle, XCircle } from "lucide-react";
 import {
   Tooltip,
@@ -416,7 +417,39 @@ export default function EmployeeHierarchyFlow() {
 
   const admin = user?.publicMetadata?.role === "admin";
 
-  if (loading) return <div className="flex text-2xl font-bold justify-center items-center">Loading employee hierarchy...</div>;
+  // Skeleton component for hierarchy loading
+  const HierarchySkeleton = () => (
+    <div style={{ width: "100%", height: "90vh", position: "relative" }}>
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="grid grid-cols-3 gap-8 mb-8">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col items-center space-y-2">
+                  <Skeleton className="w-28 h-28 rounded-lg" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-center">
+            <div className="grid grid-cols-5 gap-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex flex-col items-center space-y-2">
+                  <Skeleton className="w-20 h-20 rounded-lg" />
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="h-2 w-12" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) return <HierarchySkeleton />;
   if (error) return <div className="text-red-600">{error}</div>;
 
   return (
@@ -451,20 +484,10 @@ export default function EmployeeHierarchyFlow() {
         panOnScroll
         zoomOnScroll
         panOnDrag
+        proOptions={{ hideAttribution: true }}
         style={{ background: "#f3f6fa" }}
       >
-        <MiniMap
-          nodeColor={(n) => {
-            if (n.id === selectedNode) return "#10b981";
-            if (n.id === hoveredNode) return "#6366f1";
-            const role = n.data?.label?.props?.children?.[1]?.props?.children?.[1]?.props?.children || "EMPLOYEE";
-            if (role === "ADMIN") return "#0070f3";
-            if (role === "MANAGER") return "#f59e42";
-            if (role === "LEAD") return "#42a5f5";
-            if (role === "COLLEAGUE") return "#6366f1";
-            return "#bbb";
-          }}
-        />
+
         <Controls />
         <Background />
         <Button
