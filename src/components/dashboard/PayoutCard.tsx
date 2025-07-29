@@ -2,77 +2,103 @@ import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-const PayoutCard = () => {
-  const payouts = [
+interface PayoutCardProps {
+  userProfile?: {
+    id: string;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+    profilePictureUrl: string | null;
+  } | null;
+}
+
+const PayoutCard = ({ userProfile }: PayoutCardProps) => {
+  // Hardcoded salary data for the logged-in employee
+  const employeeSalary = 4500; // Base monthly salary
+  const bonus = 800; // Monthly bonus
+  const overtime = 300; // Overtime pay
+  
+  const monthlyPayouts = [
     {
-      name: "Syafanah san",
-      amount: "$2.540.00",
-      date: "Today",
-      status: "Waiting",
-      statusColor: "bg-yellow-500",
-      image: "/images/picture1.jpg"
+      month: "December 2024",
+      baseSalary: employeeSalary,
+      bonus: bonus,
+      overtime: overtime,
+      total: employeeSalary + bonus + overtime,
+      status: "Paid",
+      statusColor: "bg-green-500"
     },
     {
-      name: "Devon Lane",
-      amount: "$2.540.00",
-      date: "Yesterday",
-      status: "Done",
-      statusColor: "bg-green-500",
-      image: "/images/picture2.jpg"
+      month: "November 2024",
+      baseSalary: employeeSalary,
+      bonus: 600,
+      overtime: 250,
+      total: employeeSalary + 600 + 250,
+      status: "Paid",
+      statusColor: "bg-green-500"
     },
     {
-      name: "John Doe",
-      amount: "$1.800.00",
-      date: "2 days ago",
-      status: "Done",
-      statusColor: "bg-green-500",
-      image: "/images/picture3.jpg"
+      month: "October 2024",
+      baseSalary: employeeSalary,
+      bonus: 1000,
+      overtime: 400,
+      total: employeeSalary + 1000 + 400,
+      status: "Paid",
+      statusColor: "bg-green-500"
     },
     {
-      name: "Jane Smith",
-      amount: "$3.200.00",
-      date: "3 days ago",
-      status: "Failed",
-      statusColor: "bg-red-500",
-      image: "/images/picture1.jpg"
+      month: "September 2024",
+      baseSalary: employeeSalary,
+      bonus: 500,
+      overtime: 150,
+      total: employeeSalary + 500 + 150,
+      status: "Paid",
+      statusColor: "bg-green-500"
     },
     {
-      name: "Mike Johnson",
-      amount: "$2.100.00",
-      date: "4 days ago",
-      status: "Done",
-      statusColor: "bg-green-500",
-      image: "/images/picture2.jpg"
+      month: "August 2024",
+      baseSalary: employeeSalary,
+      bonus: 700,
+      overtime: 200,
+      total: employeeSalary + 700 + 200,
+      status: "Paid",
+      statusColor: "bg-green-500"
     }
   ];
 
   return (
-    <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 shadow-sm lg:max-w-sm w-full h-[290px]">
+    <div className="bg-indigo-50 rounded-xl p-4 sm:p-6 shadow-sm w-full h-[290px]">
       <div className="mb-3 sm:mb-4">
-        <p className="text-xs sm:text-sm text-gray-500">Payout monthly</p>
-        <h3 className="font-bold text-gray-900 text-sm sm:text-base">Salaries and incentive</h3>
+        <p className="text-xs sm:text-sm text-gray-500">Monthly salary</p>
+        <h3 className="font-bold text-gray-900 text-sm sm:text-base">
+          {userProfile?.firstName && userProfile?.lastName 
+            ? `${userProfile.firstName} ${userProfile.lastName}` 
+            : 'Employee'} salary
+        </h3>
       </div>
       
       <ScrollArea className="h-[200px]">
-        <div className="space-y-3 sm:space-y-4">
-          {payouts.map((payout, index) => (
-            <div key={index} className="flex items-center justify-between hover:bg-gray-300 rounded-full p-2">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
-                  <AvatarImage src={payout.image} />
+        <div className="space-y-4">
+          {monthlyPayouts.map((payout, index) => (
+            <div key={index} className="flex items-center justify-between hover:bg-gray-300 rounded-full p-3">
+              <div className="flex items-center gap-3">
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={userProfile?.profilePictureUrl || undefined} />
                   <AvatarFallback className="text-xs">
-                    {payout.name.split(' ').map(n => n[0]).join('')}
+                    {userProfile?.firstName && userProfile?.lastName 
+                      ? `${userProfile.firstName[0]}${userProfile.lastName[0]}`
+                      : 'EM'}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">{payout.name}</p>
-                  <p className="text-xs text-gray-500">{payout.date}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-900 truncate">{payout.month}</p>
+                  <p className="text-xs text-gray-500">Base: ${payout.baseSalary.toLocaleString()}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs sm:text-sm font-medium text-gray-900">{payout.amount}</p>
+              <div className="text-right ml-2">
+                <p className="text-sm font-medium text-gray-900">${payout.total.toLocaleString()}</p>
                 <div className="flex items-center gap-1">
-                  <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${payout.statusColor}`}></div>
+                  <div className={`w-2 h-2 rounded-full ${payout.statusColor}`}></div>
                   <span className="text-xs text-gray-500">{payout.status}</span>
                 </div>
               </div>

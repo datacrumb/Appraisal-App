@@ -9,38 +9,22 @@ export default async function Home() {
     redirect("/sign-in");
   }
 
-  // Fetch user profile and employee data server-side
-  const [userProfile, employeeData] = await Promise.all([
-    prisma.employee.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        department: true,
-        role: true,
-        isManager: true,
-        isLead: true,
-        profilePictureUrl: true,
-        createdAt: true,
-      }
-    }),
-    prisma.employee.findMany({
-      select: {
-        id: true,
-        email: true,
-        firstName: true,
-        lastName: true,
-        department: true,
-        role: true,
-        isManager: true,
-        isLead: true,
-        profilePictureUrl: true,
-        createdAt: true,
-      }
-    })
-  ]);
+  // Fetch user profile server-side
+  const userProfile = await prisma.employee.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      department: true,
+      role: true,
+      isManager: true,
+      isLead: true,
+      profilePictureUrl: true,
+      createdAt: true,
+    }
+  });
 
   // Calculate years of experience for user profile
   const yearsOfExperience = userProfile ? Math.floor(
@@ -53,15 +37,9 @@ export default async function Home() {
     createdAt: userProfile.createdAt.toISOString(),
   } : null;
 
-  const transformedEmployeeData = employeeData.map(emp => ({
-    ...emp,
-    createdAt: emp.createdAt.toISOString(),
-  }));
-
   return (
     <Dashboard 
       initialUserProfile={transformedUserProfile}
-      initialEmployeeData={transformedEmployeeData}
     />
   );
 }
