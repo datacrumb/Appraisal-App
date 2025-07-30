@@ -28,7 +28,7 @@ const WorkTimeCard = () => {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-semibold text-gray-900">Average work time</CardTitle>
-          <div className="text-2xl font-bold text-gray-900">{averageHours} Hours</div>
+          <div className="text-sm font-bold text-gray-900">{averageHours} Hours</div>
         </div>
       </CardHeader>
       <CardContent className="pt-0">

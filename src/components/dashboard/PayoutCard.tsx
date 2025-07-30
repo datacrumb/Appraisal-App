@@ -14,7 +14,7 @@ interface PayoutCardProps {
 
 const PayoutCard = ({ userProfile }: PayoutCardProps) => {
   // Hardcoded salary data for the logged-in employee
-  const employeeSalary = 4500; // Base monthly salary
+  const employeeSalary = 100000; // Base monthly salary
   const bonus = 800; // Monthly bonus
   const overtime = 300; // Overtime pay
   
@@ -24,7 +24,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
       baseSalary: employeeSalary,
       bonus: bonus,
       overtime: overtime,
-      total: employeeSalary + bonus + overtime,
+      total: employeeSalary + 100000 + overtime,
       status: "Paid",
       statusColor: "bg-green-500"
     },
@@ -33,7 +33,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
       baseSalary: employeeSalary,
       bonus: 600,
       overtime: 250,
-      total: employeeSalary + 600 + 250,
+      total: employeeSalary + 60000 + 250,
       status: "Paid",
       statusColor: "bg-green-500"
     },
@@ -42,7 +42,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
       baseSalary: employeeSalary,
       bonus: 1000,
       overtime: 400,
-      total: employeeSalary + 1000 + 400,
+      total: employeeSalary + 10000 + 400,
       status: "Paid",
       statusColor: "bg-green-500"
     },
@@ -51,7 +51,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
       baseSalary: employeeSalary,
       bonus: 500,
       overtime: 150,
-      total: employeeSalary + 500 + 150,
+      total: employeeSalary + 50000 + 150,
       status: "Paid",
       statusColor: "bg-green-500"
     },
@@ -60,7 +60,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
       baseSalary: employeeSalary,
       bonus: 700,
       overtime: 200,
-      total: employeeSalary + 700 + 200,
+      total: employeeSalary + 70000 + 200,
       status: "Paid",
       statusColor: "bg-green-500"
     }
@@ -96,7 +96,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
                 </div>
               </div>
               <div className="text-right ml-2">
-                <p className="text-sm font-medium text-gray-900">${payout.total.toLocaleString()}</p>
+                <p className="text-sm font-medium text-gray-900">Rs: {payout.total.toLocaleString()}</p>
                 <div className="flex items-center gap-1">
                   <div className={`w-2 h-2 rounded-full ${payout.statusColor}`}></div>
                   <span className="text-xs text-gray-500">{payout.status}</span>
