@@ -16,7 +16,7 @@ const HoursWeeksCard = () => {
   // Generate attendance data for the entire year (12 months x 30 days each)
   const generateYearlyAttendanceData = () => {
     const yearlyData = [];
-    
+
     for (let month = 1; month <= 12; month++) {
       const monthData = [];
       for (let day = 1; day <= 30; day++) {
@@ -33,7 +33,7 @@ const HoursWeeksCard = () => {
       }
       yearlyData.push({ month, data: monthData });
     }
-    
+
     return yearlyData;
   };
 
@@ -66,7 +66,7 @@ const HoursWeeksCard = () => {
               </div>
             </div>
           </div>
-                    
+
           {/* GitHub-style Attendance Grid */}
           <div className="mb-3 sm:mb-4">
             <ScrollArea className="w-full">
@@ -97,21 +97,21 @@ const HoursWeeksCard = () => {
               </TooltipProvider>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
-            
+
             {/* Legend */}
             <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6">
-              <span className="text-xs text-gray-600">Absent</span>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-300 rounded-sm"></div>
-              </div>
-              <span className="text-xs text-gray-600">Leave</span>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-200 rounded-sm"></div>
-              </div>
-              <span className="text-xs text-gray-600">Present</span>
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 sm:w-4 sm:h-4 bg-[#10b981] rounded-sm"></div>
               </div>
+              <span className="text-xs text-gray-600">Present</span>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-200 rounded-sm"></div>
+              </div>
+              <span className="text-xs text-gray-600">Leave</span>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-300 rounded-sm"></div>
+              </div>
+              <span className="text-xs text-gray-600">Absent</span>
             </div>
           </div>
         </div>
@@ -119,26 +119,23 @@ const HoursWeeksCard = () => {
         {/* Right Panel: Team Distribution */}
         <div className="w-full lg:w-44 h-48 sm:h-60 bg-cyan-700 p-2 rounded-4xl relative overflow-hidden">
           {/* Animated Background Slider */}
-          <div 
-            className={`absolute top-2 left-2 right-2 h-24 sm:h-28 bg-white rounded-4xl transition-transform duration-500 ease-in-out ${
-              activeTab === 'onsite' ? 'translate-y-0' : 'translate-y-24 sm:translate-y-28'
-            }`}
+          <div
+            className={`absolute top-2 left-2 right-2 h-24 sm:h-28 bg-white rounded-4xl transition-transform duration-500 ease-in-out ${activeTab === 'onsite' ? 'translate-y-0' : 'translate-y-24 sm:translate-y-28'
+              }`}
           />
-          
+
           {/* Onsite Team */}
-          <div 
-            className={`relative rounded-4xl p-3 sm:p-4 h-24 sm:h-28 cursor-pointer transition-all duration-300 ${
-              activeTab === 'onsite' 
-                ? 'text-gray-900' 
+          <div
+            className={`relative rounded-4xl p-3 sm:p-4 h-24 sm:h-28 cursor-pointer transition-all duration-300 ${activeTab === 'onsite'
+                ? 'text-gray-900'
                 : 'text-white hover:bg-white/10'
-            }`}
+              }`}
             onClick={() => setActiveTab('onsite')}
           >
             <div className="flex items-center justify-between mb-1 sm:mb-2">
               <LuUserRoundCheck className="w-4 h-4 sm:w-5 sm:h-5" />
-              <div className={`flex items-center gap-1 text-xs sm:text-sm ${
-                activeTab === 'onsite' ? 'text-red-600' : 'text-red-300'
-              }`}>
+              <div className={`flex items-center gap-1 text-xs sm:text-sm ${activeTab === 'onsite' ? 'text-red-600' : 'text-red-300'
+                }`}>
                 <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4" />
                 +2.6%
               </div>
@@ -148,21 +145,19 @@ const HoursWeeksCard = () => {
               <span className="text-xs sm:text-sm">Onsite</span>
             </div>
           </div>
-          
+
           {/* Remote Team */}
-          <div 
-            className={`relative rounded-4xl p-3 sm:p-4 h-24 sm:h-28 cursor-pointer transition-all duration-300 ${
-              activeTab === 'remote' 
-                ? 'text-gray-900' 
+          <div
+            className={`relative rounded-4xl p-3 sm:p-4 h-24 sm:h-28 cursor-pointer transition-all duration-300 ${activeTab === 'remote'
+                ? 'text-gray-900'
                 : 'text-white hover:bg-white/10'
-            }`}
+              }`}
             onClick={() => setActiveTab('remote')}
           >
             <div className="flex items-center justify-between mb-1 sm:mb-2">
               <Globe className="w-4 h-4 sm:w-5 sm:h-5" />
-              <div className={`flex items-center gap-1 text-xs sm:text-sm ${
-                activeTab === 'remote' ? 'text-green-600' : 'text-green-300'
-              }`}>
+              <div className={`flex items-center gap-1 text-xs sm:text-sm ${activeTab === 'remote' ? 'text-green-600' : 'text-green-300'
+                }`}>
                 <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
                 +2.6%
               </div>
