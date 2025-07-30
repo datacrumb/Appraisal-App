@@ -93,6 +93,17 @@ const LearningDevelopmentCard = () => {
               </div>
             </div>
           ))}
+          {/* Legend */}
+          <div className="flex items-center gap-2 sm:gap-4 mt-4 sm:mt-6">
+            <span className="text-xs text-gray-600">Completed</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-[#10b981] rounded-sm"></div>
+            </div>
+            <span className="text-xs text-gray-600">In progress</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-200 rounded-sm"></div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
