@@ -200,8 +200,8 @@ const UserProfileCard = ({ initialProfile }: UserProfileCardProps) => {
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-cyan-700 rounded-xl text-white">
-                  <p>{profile.phoneNumber ? `Copy ${profile.phoneNumber}` : 'No phone number available'}</p>
+                <TooltipContent className="bg-black rounded-xl text-white">
+                  <p>{profile.phoneNumber ? `${profile.phoneNumber}` : 'No phone number available'}</p>
                 </TooltipContent>
               </Tooltip>
               
@@ -219,8 +219,8 @@ const UserProfileCard = ({ initialProfile }: UserProfileCardProps) => {
                     )}
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-cyan-700 rounded-xl text-white">
-                  <p>{profile.email ? `Copy ${profile.email}` : 'No email available'}</p>
+                <TooltipContent className="bg-black rounded-xl text-white">
+                  <p>{profile.email ? `${profile.email}` : 'No email available'}</p>
                 </TooltipContent>
               </Tooltip>
             </div>

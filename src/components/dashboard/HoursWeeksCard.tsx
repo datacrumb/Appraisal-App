@@ -85,7 +85,7 @@ const HoursWeeksCard = () => {
                                 className={`w-3 h-3 sm:w-4 sm:h-4 rounded-sm ${getAttendanceColor(item.status)} cursor-pointer`}
                               />
                             </TooltipTrigger>
-                            <TooltipContent className="bg-cyan-700 text-white rounded-xl">
+                            <TooltipContent className="bg-black text-white rounded-xl">
                               <p>{`${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthData.month - 1]} Day ${item.day}: ${item.status === 'present' ? 'Present' : item.status === 'leave' ? 'Leave' : 'Absent'}`}</p>
                             </TooltipContent>
                           </Tooltip>
