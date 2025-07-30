@@ -33,7 +33,7 @@ const LearningDevelopmentCard = () => {
       title: 'AIOPS Deployment',
       type: 'webinar',
       status: 'upcoming',
-      color: 'bg-yellow-500'
+      color: 'bg-yellow-400'
     }
   ];
 
@@ -71,9 +71,6 @@ const LearningDevelopmentCard = () => {
             View your completed trainings, certifications, and skill progress in one place.
           </p>
         </div>
-        <div className="text-xl font-extrabold text-gray-900">
-          Legends
-        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -101,7 +98,11 @@ const LearningDevelopmentCard = () => {
             </div>
             <span className="text-xs text-gray-600">In progress</span>
             <div className="flex items-center gap-1">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-200 rounded-sm"></div>
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-sm"></div>
+            </div>
+            <span className="text-xs text-gray-600">Upcoming</span>
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-400 rounded-sm"></div>
             </div>
           </div>
         </div>
