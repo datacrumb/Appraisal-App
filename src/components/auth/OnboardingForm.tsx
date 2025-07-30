@@ -8,7 +8,7 @@ import AppraisalForm from "@/components/Form";
 interface OnboardingQuestion {
   id: string;
   label: string;
-  type: "rating" | "multiple-choice" | "text" | "select";
+  type: "rating" | "multiple-choice" | "text" | "select" | "tel";
   options?: string[];
   section: string;
 }
@@ -108,6 +108,7 @@ export function OnboardingForm() {
       const formData = new FormData();
       formData.append('department', answers.department);
       formData.append('role', answers.role);
+      formData.append('phoneNumber', answers.phoneNumber || '');
       formData.append('isManager', answers.isManager || 'false');
       formData.append('isLead', answers.isLead || 'false');
       formData.append('manager', answers.manager || '');
@@ -165,6 +166,12 @@ export function OnboardingForm() {
       type: "select",
       options: roles,
       section: "Basic Information"
+    },
+    {
+      id: "phoneNumber",
+      label: "What is your phone number?",
+      type: "tel",
+      section: "Contact Information"
     },
     {
       id: "isManager",

@@ -11,6 +11,7 @@ import PayoutCard from "./PayoutCard";
 interface UserProfile {
   id: string;
   email: string;
+  phoneNumber: string | null;
   firstName: string | null;
   lastName: string | null;
   department: string | null;

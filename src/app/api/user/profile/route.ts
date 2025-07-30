@@ -24,6 +24,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         id: employee.id,
         email: employee.email,
+        phoneNumber: employee.phoneNumber,
         firstName: employee.firstName,
         lastName: employee.lastName,
         department: employee.department,
@@ -41,7 +42,15 @@ export async function GET(req: NextRequest) {
       where: { userId: userId },
     });
 
+    console.log('🔍 API: OnboardingRequest found:', !!onboardingRequest);
     if (onboardingRequest) {
+      console.log('🔍 API: OnboardingRequest data:', {
+        userId: onboardingRequest.userId,
+        email: onboardingRequest.email,
+        phoneNumber: onboardingRequest.phoneNumber,
+        firstName: onboardingRequest.firstName,
+        lastName: onboardingRequest.lastName
+      });
       // Calculate years of experience based on createdAt
       const yearsOfExperience = Math.floor(
         (Date.now() - new Date(onboardingRequest.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365)
@@ -50,6 +59,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         id: onboardingRequest.userId,
         email: onboardingRequest.email,
+        phoneNumber: onboardingRequest.phoneNumber,
         firstName: onboardingRequest.firstName,
         lastName: onboardingRequest.lastName,
         department: onboardingRequest.department,
@@ -67,6 +77,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       id: userId,
       email: "",
+      phoneNumber: "",
       firstName: "",
       lastName: "",
       department: "",

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -25,7 +26,7 @@ import Image from "next/image";
 interface Question {
   id: string;
   label: string;
-  type: "rating" | "multiple-choice" | "text" | "select";
+  type: "rating" | "multiple-choice" | "text" | "select" | "tel";
   options?: string[];
   section: string;
 }
@@ -74,6 +75,11 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
         fieldSchema = fieldSchema.refine(
           (val) => question.options!.includes(val),
           { message: `Please select one of the available options` }
+        );
+      } else if (question.type === "tel") {
+        fieldSchema = fieldSchema.refine(
+          (val) => /^[\+]?[1-9][\d]{0,15}$/.test(val.replace(/\s/g, '')),
+          { message: "Please enter a valid phone number" }
         );
       }
 
@@ -246,6 +252,17 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                       ))}
                     </SelectContent>
                   </Select>
+                )}
+
+                {question.type === "tel" && (
+                  <Input
+                    {...field}
+                    type="tel"
+                    className={`rounded-none ${readOnly ? 'bg-gray-50 cursor-default' : ''}`}
+                    placeholder={readOnly ? "No phone number provided" : "+1 (555) 123-4567"}
+                    disabled={loading || readOnly}
+                    readOnly={readOnly}
+                  />
                 )}
 
                 {question.type === "text" && (

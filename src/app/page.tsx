@@ -15,6 +15,7 @@ export default async function Home() {
     select: {
       id: true,
       email: true,
+      phoneNumber: true,
       firstName: true,
       lastName: true,
       department: true,

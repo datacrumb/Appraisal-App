@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const department = formData.get('department') as string;
     const role = formData.get('role') as string;
+    const phoneNumber = formData.get('phoneNumber') as string;
     const isManager = formData.get('isManager') as string;
     const isLead = formData.get('isLead') as string;
     const manager = formData.get('manager') as string;
@@ -63,6 +64,7 @@ export async function POST(request: Request) {
         lastName: user.lastName || "",
         department,
         role,
+        phoneNumber: phoneNumber || null,
         isManager: isManager === 'true',
         isLead: isLead === 'true',
         managerEmail: manager || null,
