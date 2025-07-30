@@ -61,7 +61,7 @@ const LearningDevelopmentCard = () => {
   };
 
   return (
-    <Card className="w-full h-full">
+    <Card className="w-full h-full bg-indigo-50">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
           <CardTitle className="text-lg font-bold text-gray-900">

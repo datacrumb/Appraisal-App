@@ -63,10 +63,10 @@ const WorkTimeCard = () => {
             <Line
               dataKey="hours"
               type="linear"
-              stroke="#3b82f6"
+              stroke="#10b981"
               strokeWidth={2}
-              dot={{ fill: "#3b82f6", strokeWidth: 2, r: 3 }}
-              activeDot={{ r: 5, stroke: "#3b82f6", strokeWidth: 2 }}
+              dot={{ fill: "#10b981", strokeWidth: 2, r: 3 }}
+              activeDot={{ r: 5, stroke: "#10b981", strokeWidth: 2 }}
             />
           </LineChart>
         </ChartContainer>
