@@ -21,6 +21,8 @@ type Assignment = {
     targetRole: string;
     targetDepartment: string;
   };
+  hasResponse?: boolean;
+  submittedAt?: string;
 };
 
 export default function AssignmentReviewPage() {

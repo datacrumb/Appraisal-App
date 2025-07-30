@@ -26,6 +26,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import ResponseViewerSheet from './ResponseViewerSheet';
 import { TableSkeleton } from './layout/TableSkeleton';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 // Assignment type for TypeScript
 interface Assignment {
@@ -75,6 +77,7 @@ const Assignments = () => {
   const [selectedResponse, setSelectedResponse] = useState<Response | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     setLoading(true);
@@ -136,7 +139,24 @@ const Assignments = () => {
   };
 
   const handleViewResponse = async (assignmentId: string) => {
-    setSelectedResponse({ id: assignmentId } as Response);
+    try {
+      // Fetch the response for this assignment
+      const response = await fetch(`/api/assignments/${assignmentId}/responses`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch response');
+      }
+      const data = await response.json();
+      
+      if (data && data.id) {
+        // Navigate to the response view page with the actual response ID
+        router.push(`/assignments/${assignmentId}/responses/${data.id}`);
+      } else {
+        toast.error('No response found for this assignment');
+      }
+    } catch (error) {
+      console.error('Error fetching response:', error);
+      toast.error('Failed to load response');
+    }
   };
 
   const handleCloseResponse = () => {
@@ -180,92 +200,92 @@ const Assignments = () => {
             <div className="text-sm text-gray-500">
               {searchTerm ? `${filteredAssignments.length} of ${assignments.length} assignments` : `${assignments.length} assignments`}
             </div>
-          </div>
+        </div>
 
           {/* Search Bar */}
           <div className="mb-4">
             {loading ? (
               <Skeleton className="h-10 w-full" />
             ) : (
-              <div className="relative">
+          <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Search assignments..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+            <Input
+              placeholder="Search assignments..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
-                />
+            />
               </div>
             )}
-          </div>
+      </div>
 
           {loading ? (
             <TableSkeleton />
           ) : (
             <div className="border rounded-lg">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Role & Department</TableHead>
-                    <TableHead>Form Type</TableHead>
-                    <TableHead>Assigned Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAssignments.map((assignment) => (
-                    <TableRow key={assignment.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
-                            {getEvaluationTypeIcon(assignment.evaluationTarget?.type)}
-                          </div>
-                          <div>
-                            <div className="font-medium">
-                              {assignment.evaluationTarget?.targetName || 'Unknown Employee'}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                              {assignment.evaluationTarget?.type || 'Evaluation'}
-                            </div>
-                          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Employee</TableHead>
+                <TableHead>Role & Department</TableHead>
+                <TableHead>Form Type</TableHead>
+                <TableHead>Assigned Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAssignments.map((assignment) => (
+                <TableRow key={assignment.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 bg-primary/10 rounded-full">
+                        {getEvaluationTypeIcon(assignment.evaluationTarget?.type)}
+                      </div>
+                      <div>
+                        <div className="font-medium">
+                          {assignment.evaluationTarget?.targetName || 'Unknown Employee'}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium text-sm">
-                            {assignment.evaluationTarget?.targetRole || 'N/A'}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {assignment.evaluationTarget?.targetDepartment || 'N/A'}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="max-w-[200px]">
-                          <div className="font-medium text-sm truncate">
-                            {assignment.form.title}
-                          </div>
-                          {assignment.form.description && (
-                            <div className="text-xs text-muted-foreground truncate">
-                              {assignment.form.description}
-                            </div>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <div className="text-sm text-muted-foreground">
-                          {new Date(assignment.assignedAt).toLocaleDateString()}
+                          {assignment.evaluationTarget?.type || 'Evaluation'}
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {new Date(assignment.assignedAt).toLocaleTimeString()}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="font-medium text-sm">
+                        {assignment.evaluationTarget?.targetRole || 'N/A'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {assignment.evaluationTarget?.targetDepartment || 'N/A'}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="max-w-[200px]">
+                      <div className="font-medium text-sm truncate">
+                        {assignment.form.title}
+                      </div>
+                      {assignment.form.description && (
+                        <div className="text-xs text-muted-foreground truncate">
+                          {assignment.form.description}
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {getStatusBadge(assignment)}
-                      </TableCell>
-                      <TableCell className="text-right">
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-muted-foreground">
+                      {new Date(assignment.assignedAt).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(assignment.assignedAt).toLocaleTimeString()}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {getStatusBadge(assignment)}
+                  </TableCell>
+                  <TableCell className="text-right">
                         {assignment.hasResponse ? (
                           <Button
                             size="sm"
@@ -276,21 +296,21 @@ const Assignments = () => {
                             View
                           </Button>
                         ) : (
-                          <Button
-                            asChild
-                            size="sm"
+                    <Button
+                      asChild
+                      size="sm"
                             variant="default"
-                          >
-                            <Link href={`/assignments/${assignment.id}`}>
+                    >
+                      <Link href={`/assignments/${assignment.id}`}>
                               Fill Out
-                            </Link>
-                          </Button>
+                      </Link>
+                    </Button>
                         )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
             </div>
           )}
         </div>

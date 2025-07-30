@@ -13,19 +13,26 @@ import {
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Image from "next/image";
 
 interface Question {
   id: string;
   label: string;
-  type: "rating" | "multiple-choice" | "text";
+  type: "rating" | "multiple-choice" | "text" | "select";
   options?: string[];
   section: string;
 }
 
 interface AppraisalFormProps {
   questions: Question[];
-  onSubmit: (answers: Record<string, string>) => Promise<void>;
+  onSubmit?: (answers: Record<string, string>) => Promise<void>;
   formTitle?: string;
   formDescription?: string;
   evaluationTarget?: {
@@ -35,6 +42,10 @@ interface AppraisalFormProps {
     targetRole: string;
     targetDepartment: string;
   };
+  // Read-only mode props
+  readOnly?: boolean;
+  defaultValues?: Record<string, string>;
+  submittedAt?: string;
 }
 
 const AppraisalForm: React.FC<AppraisalFormProps> = ({
@@ -42,7 +53,10 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   onSubmit,
   formTitle = "Employee Performance Evaluation",
   formDescription = "Evaluate the employees overall effectiveness in thier role, including the quality and consistency of their work, ability to meet deadlines, ownership of tasks, and contribution to team goals.",
-  evaluationTarget
+  evaluationTarget,
+  readOnly = false,
+  defaultValues = {},
+  submittedAt
 }) => {
   // Create dynamic Zod schema based on questions
   const createValidationSchema = () => {
@@ -56,7 +70,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
           (val) => ["1", "2", "3", "4", "5"].includes(val),
           { message: "Please select a rating between 1 and 5" }
         );
-      } else if (question.type === "multiple-choice" && question.options) {
+      } else if ((question.type === "multiple-choice" || question.type === "select") && question.options) {
         fieldSchema = fieldSchema.refine(
           (val) => question.options!.includes(val),
           { message: `Please select one of the available options` }
@@ -72,15 +86,15 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   const validationSchema = createValidationSchema();
   type FormData = z.infer<typeof validationSchema>;
 
-  const defaultValues = questions.reduce((acc, q) => {
+  const initialValues = readOnly ? defaultValues : questions.reduce((acc, q) => {
     acc[q.id] = "";
     return acc;
   }, {} as Record<string, string>);
 
   const methods = useForm<FormData>({
-    defaultValues,
+    defaultValues: initialValues,
     resolver: zodResolver(validationSchema),
-    mode: "onChange" // Validate on change for better UX
+    mode: readOnly ? "onSubmit" : "onChange" // Only validate on submit in read-only mode
   });
 
   const { handleSubmit, reset, watch, formState: { errors, isValid } } = methods;
@@ -136,6 +150,8 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   };
 
   const handleFormSubmit = async (data: FormData) => {
+    if (readOnly || !onSubmit) return;
+    
     setLoading(true);
     try {
       await onSubmit(data);
@@ -178,11 +194,14 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         key={`${question.id}-rating-${rating}`}
                         type="button"
                         variant={field.value === rating.toString() ? "default" : "outline"}
-                        className={`w-12 h-12 rounded-none hover:cursor-pointer ${field.value === rating.toString()
+                        className={`w-12 h-12 rounded-none ${readOnly ? 'cursor-default' : 'hover:cursor-pointer'} ${field.value === rating.toString()
                           ? "bg-gray-900 text-white border-gray-900"
-                          : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                          : readOnly 
+                            ? "bg-gray-100 text-gray-400 border-gray-200"
+                            : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                           }`}
-                        onClick={() => field.onChange(rating.toString())}
+                        onClick={readOnly ? undefined : () => field.onChange(rating.toString())}
+                        disabled={readOnly}
                       >
                         {rating}
                       </Button>
@@ -197,11 +216,14 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         key={`${question.id}-option-${index}`}
                         type="button"
                         variant={field.value === option ? "default" : "outline"}
-                        className={`justify-start h-auto p-3 rounded-none hover:cursor-pointer ${field.value === option
+                        className={`justify-start h-auto p-3 rounded-none ${readOnly ? 'cursor-default' : 'hover:cursor-pointer'} ${field.value === option
                           ? "bg-gray-900 text-white border-gray-900"
-                          : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
+                          : readOnly 
+                            ? "bg-gray-100 text-gray-400 border-gray-200"
+                            : "bg-white text-gray-900 border-gray-300 hover:bg-gray-50"
                           }`}
-                        onClick={() => field.onChange(option)}
+                        onClick={readOnly ? undefined : () => field.onChange(option)}
+                        disabled={readOnly}
                       >
                         {option}
                       </Button>
@@ -209,12 +231,30 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                   </div>
                 )}
 
+                {question.type === "select" && question.options && (
+                  <Select onValueChange={field.onChange} value={field.value} disabled={readOnly}>
+                    <FormControl>
+                      <SelectTrigger className={`rounded-none ${readOnly ? 'bg-gray-50 cursor-default' : ''}`}>
+                        <SelectValue placeholder="Select an option" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {question.options.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
                 {question.type === "text" && (
                   <textarea
                     {...field}
-                    className="w-full min-h-[80px] border border-gray-300 rounded-none p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-                    placeholder="Your answer..."
-                    disabled={loading}
+                    className={`w-full min-h-[80px] border border-gray-300 rounded-none p-3 text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-gray-900 focus:border-transparent ${readOnly ? 'bg-gray-50 cursor-default' : ''}`}
+                    placeholder={readOnly ? "No answer provided" : "Your answer..."}
+                    disabled={loading || readOnly}
+                    readOnly={readOnly}
                   />
                 )}
               </div>
@@ -260,8 +300,13 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                   </div>
                 )}
               <p className="text-black leading-relaxed">
-                {formDescription}
+                {readOnly ? `Submitted Response - ${formDescription}` : formDescription}
               </p>
+              {readOnly && submittedAt && (
+                <p className="text-sm text-gray-500 mt-2">
+                  Submitted on: {new Date(submittedAt).toLocaleString()}
+                </p>
+              )}
             </div>
 
             {/* Section Header */}
@@ -299,12 +344,12 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                       <Button
                         type="button"
                         onClick={nextSection}
-                        disabled={!isCurrentSectionComplete() || !isCurrentSectionValid()}
+                        disabled={readOnly ? false : (!isCurrentSectionComplete() || !isCurrentSectionValid())}
                         className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
                       </Button>
-                    ) : (
+                    ) : !readOnly ? (
                       <Button
                         type="submit"
                         disabled={loading || !isValid}
@@ -312,7 +357,7 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                       >
                         {loading ? "Submitting..." : "Submit"}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Progress */}

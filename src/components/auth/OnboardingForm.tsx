@@ -1,36 +1,17 @@
 "use client";
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import AppraisalForm from "@/components/Form";
 
-const formSchema = z.object({
-  department: z.string().min(1, "Department is required"),
-  role: z.string().min(1, "Role is required"),
-  isManager: z.boolean(),
-  isLead: z.boolean(),
-  manager: z.string().optional(), // Make it optional
-  profilePicture: z.instanceof(File).optional(),
-});
+// Define the question structure for onboarding
+interface OnboardingQuestion {
+  id: string;
+  label: string;
+  type: "rating" | "multiple-choice" | "text" | "select";
+  options?: string[];
+  section: string;
+}
 
 // Static departments
 const departments = [
@@ -104,21 +85,9 @@ export function OnboardingForm() {
     fetchManagers();
   }, []);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      department: "",
-      role: "",
-      isManager: false,
-      isLead: false,
-      manager: "",
-    },
-  });
-
   // Fetch managers when department changes
   const handleDepartmentChange = async (department: string) => {
     setSelectedDepartment(department);
-    form.setValue("department", department);
     
     if (department) {
       try {
@@ -133,23 +102,15 @@ export function OnboardingForm() {
     }
   };
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (answers: Record<string, string>) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('department', values.department);
-      formData.append('role', values.role);
-      formData.append('isManager', values.isManager.toString());
-      formData.append('isLead', values.isLead.toString());
-      
-      // Handle manager assignment logic
-      let managerValue = values.manager || '';
-      
-      formData.append('manager', managerValue);
-      
-      if (values.profilePicture) {
-        formData.append('profilePicture', values.profilePicture);
-      }
+      formData.append('department', answers.department);
+      formData.append('role', answers.role);
+      formData.append('isManager', answers.isManager || 'false');
+      formData.append('isLead', answers.isLead || 'false');
+      formData.append('manager', answers.manager || '');
 
       const response = await fetch("/api/onboarding", {
         method: "POST",
@@ -189,152 +150,51 @@ export function OnboardingForm() {
     );
   }
 
+  // Create onboarding questions using the same structure as assignment forms
+  const onboardingQuestions: OnboardingQuestion[] = [
+    {
+      id: "department",
+      label: "What department do you work in?",
+      type: "select",
+      options: departments,
+      section: "Basic Information"
+    },
+    {
+      id: "role",
+      label: "What is your role?",
+      type: "select",
+      options: roles,
+      section: "Basic Information"
+    },
+    {
+      id: "isManager",
+      label: "Are you a Manager?",
+      type: "select",
+      options: ["Yes", "No"],
+      section: "Leadership"
+    },
+    {
+      id: "isLead",
+      label: "Are you a Team Lead?",
+      type: "select",
+      options: ["Yes", "No"],
+      section: "Leadership"
+    },
+    {
+      id: "manager",
+      label: "Who is your manager? (Optional)",
+      type: "select",
+      options: managers.map(m => m.name),
+      section: "Reporting"
+    }
+  ];
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="department"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Department</FormLabel>
-              <Select onValueChange={(value) => handleDepartmentChange(value)} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your department" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {departments.map((dept) => (
-                    <SelectItem key={dept} value={dept}>
-                      {dept}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {role}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="space-y-4">
-          <FormField
-            control={form.control}
-            name="isManager"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <input
-                    type="checkbox"
-                    checked={field.value}
-                    onChange={field.onChange}
-                    className="mt-1"
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>I am a Manager</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="isLead"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <input
-                    type="checkbox"
-                    checked={field.value}
-                    onChange={field.onChange}
-                    className="mt-1"
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel>I am a Team Lead</FormLabel>
-                </div>
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="manager"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Manager (Optional)</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your manager (optional)" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {managers.map((manager) => (
-                    <SelectItem key={manager.userId} value={manager.name}>
-                      {manager.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="profilePicture"
-          render={({ field: { onChange, value, ...field } }) => (
-            <FormItem>
-              <FormLabel>Profile Picture</FormLabel>
-              <FormControl>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    onChange(file);
-                  }}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </Button>
-      </form>
-    </Form>
+    <AppraisalForm
+      questions={onboardingQuestions}
+      formTitle="Employee Onboarding"
+      formDescription="Please provide your basic information to complete your onboarding process. This information will help us set up your account and assign you to the appropriate teams and projects."
+      onSubmit={onSubmit}
+    />
   );
 }
