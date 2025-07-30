@@ -19,7 +19,7 @@ const LearningDevelopmentCard = () => {
       title: 'Agentic AI for Coding',
       type: 'course',
       status: 'completed',
-      color: 'bg-green-500'
+      color: 'bg-[#10b981]'
     },
     {
       id: '2',
