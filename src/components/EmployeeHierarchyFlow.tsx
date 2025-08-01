@@ -67,6 +67,28 @@ function getProfilePictureUrl(employee: Employee) {
   return employee.profilePictureUrl || null;
 }
 
+// Department color mapping
+const departmentColors: Record<string, { border: string; background: string; iconBg: string }> = {
+  'Human Resource': { border: '#8B5CF6', background: '#8B5CF6', iconBg: '#7C3AED' },
+  'Business Development': { border: '#F59E0B', background: '#F59E0B', iconBg: '#D97706' },
+  'Projects': { border: '#10B981', background: '#10B981', iconBg: '#059669' },
+  'Proposals': { border: '#3B82F6', background: '#3B82F6', iconBg: '#2563EB' },
+  'Planning': { border: '#EF4444', background: '#EF4444', iconBg: '#DC2626' },
+  'HSE': { border: '#06B6D4', background: '#06B6D4', iconBg: '#0891B2' },
+  'Quality': { border: '#84CC16', background: '#84CC16', iconBg: '#65A30D' },
+  'Procurement': { border: '#F97316', background: '#F97316', iconBg: '#EA580C' },
+  'Accounts': { border: '#EC4899', background: '#EC4899', iconBg: '#DB2777' },
+  'Taxation': { border: '#6366F1', background: '#6366F1', iconBg: '#4F46E5' },
+  'Executive': { border: '#0070f3', background: '#0070f3', iconBg: '#0051a2' },
+  'Unknown': { border: '#6B7280', background: '#6B7280', iconBg: '#4B5563' },
+};
+
+// Get department color
+function getDepartmentColor(department: string | null) {
+  const dept = department || 'Unknown';
+  return departmentColors[dept] || departmentColors['Unknown'];
+}
+
 const nodeWidth = 160;
 const nodeHeight = 140;
 
@@ -194,7 +216,7 @@ export default function EmployeeHierarchyFlow() {
           if (emp.isManager) {
             roleMap[emp.id] = "MANAGER";
           } else if (emp.isLead) {
-            roleMap[emp.id] = "LEAD";
+            roleMap[emp.id] = "EXECUTIVE";
           } else {
             roleMap[emp.id] = "EMPLOYEE";
           }
@@ -202,6 +224,9 @@ export default function EmployeeHierarchyFlow() {
 
         // Admin gets highest priority
         roleMap[adminId] = "ADMIN";
+
+        // Find Executive department employees
+        const executiveEmployees = employees.filter(emp => emp.department === 'Executive');
 
         // Map employees to nodes (without manual positioning)
         const nodes: Node[] = employees.map((emp) => {
@@ -218,15 +243,10 @@ export default function EmployeeHierarchyFlow() {
             background = "#f59e42";
             iconBg = "#d97706";
             textColor = "#ffffff";
-          } else if (role === "LEAD") {
+          } else if (role === "EXECUTIVE") {
             border = "2px solid #42a5f5";
             background = "#42a5f5";
             iconBg = "#1976d2";
-            textColor = "#ffffff";
-          } else if (role === "COLLEAGUE") {
-            border = "2px solid #6366f1";
-            background = "#6366f1";
-            iconBg = "#4f46e5";
             textColor = "#ffffff";
           } else {
             border = "1px solid #10b981";
@@ -302,53 +322,72 @@ export default function EmployeeHierarchyFlow() {
           };
         });
 
-        // Create edges from relations
-        const edges: Edge[] = relations.map((rel) => {
-          // Get the source node's role to determine edge color
+        // Create edges based on new hierarchy: ADMIN → MANAGER → EXECUTIVE → EMPLOYEE
+        const edges: Edge[] = [];
+        
+        // 1. Connect Executive department employees to all other departments
+        if (executiveEmployees.length > 0) {
+          // Get all non-Executive employees
+          const nonExecutiveEmployees = employees.filter(emp => emp.department !== 'Executive');
+          
+          // Connect each Executive employee to all other departments
+          executiveEmployees.forEach((executive) => {
+            nonExecutiveEmployees.forEach((employee) => {
+              edges.push({
+                id: `executive-${executive.id}-${employee.id}`,
+                source: executive.id,
+                target: employee.id,
+                animated: true,
+                style: {
+                  stroke: getDepartmentColor(employee.department).background,
+                  strokeWidth: 2,
+                  strokeDasharray: "5,5",
+                },
+              });
+            });
+          });
+        }
+        
+        // 2. Create hierarchy edges based on roles
+        relations.forEach((rel) => {
           const sourceRole = roleMap[rel.fromId] || "EMPLOYEE";
-          let stroke, strokeDasharray;
-
-          // Use source position color for the edge
-          if (sourceRole === "ADMIN") {
-            stroke = "#0070f3";
-          } else if (sourceRole === "MANAGER") {
-            stroke = "#f59e42";
-          } else if (sourceRole === "LEAD") {
-            stroke = "#42a5f5";
-          } else if (sourceRole === "COLLEAGUE") {
-            stroke = "#6366f1";
-          } else {
-            stroke = "#10b981"; // Employee color
+          const targetRole = roleMap[rel.toId] || "EMPLOYEE";
+          
+          // Only create edges that follow the hierarchy: ADMIN → MANAGER → EXECUTIVE → EMPLOYEE
+          const roleHierarchy = { "ADMIN": 4, "MANAGER": 3, "EXECUTIVE": 2, "EMPLOYEE": 1 };
+          const sourceLevel = roleHierarchy[sourceRole as keyof typeof roleHierarchy] || 1;
+          const targetLevel = roleHierarchy[targetRole as keyof typeof roleHierarchy] || 1;
+          
+          // Only connect if source is higher in hierarchy than target
+          if (sourceLevel > targetLevel) {
+            let stroke, strokeDasharray;
+            
+            // Use department color for the edge
+            const sourceEmployee = employees.find(emp => emp.id === rel.fromId);
+            const sourceDept = sourceEmployee?.department || 'Unknown';
+            stroke = getDepartmentColor(sourceDept).background;
+            
+            // Visual distinction for different relation types
+            if (rel.type === "MANAGER") {
+              strokeDasharray = undefined; // Solid line
+            } else if (rel.type === "EXECUTIVE") {
+              strokeDasharray = "5,5"; // Dashed line
+            } else {
+              strokeDasharray = "2,4"; // Dotted line
+            }
+            
+            edges.push({
+              id: rel.id,
+              source: rel.fromId,
+              target: rel.toId,
+              animated: rel.type === "MANAGER" || rel.type === "EXECUTIVE",
+              style: {
+                stroke,
+                strokeDasharray,
+                strokeWidth: 3,
+              },
+            });
           }
-
-          // Keep some visual distinction for different relation types
-          if (rel.type === "MANAGER") {
-            strokeDasharray = undefined; // Solid line for manager relations
-          } else if (rel.type === "LEAD") {
-            strokeDasharray = "5,5"; // Dashed line for lead relations
-          } else if (rel.type === "COLLEAGUE") {
-            strokeDasharray = "2,4"; // Dotted line for colleague relations
-          }
-
-          return {
-            id: rel.id,
-            source: rel.fromId,
-            target: rel.toId,
-            animated: rel.type === "MANAGER" || rel.type === "LEAD",
-            style: {
-              stroke,
-              strokeDasharray,
-              strokeWidth: 3,
-            },
-            labelStyle: {
-              fill: "#333",
-              fontWeight: 600,
-              fontSize: 13,
-              background: "#fff",
-              padding: "2px 6px",
-              borderRadius: 4,
-            },
-          };
         });
 
         // Apply automatic layout using dagre
