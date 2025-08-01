@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   "/onboarding(.*)",
   "/api/onboarding(.*)",
   "/api/managers(.*)",
+  "/api/leads(.*)",
   "/api/auth/session(.*)",
   "/api/auth/check-approval(.*)",
 ]);
@@ -46,36 +47,35 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
     return NextResponse.redirect(onboardingUrl);
   }
 
-  // Check if user is admin first (for all routes)
-  const { isAdmin } = await import('./lib/isAdmin');
-  const isUserAdmin = await isAdmin(userId);
-  
-  // If user is admin, allow access to all routes regardless of approval status
-  if (isUserAdmin) {
-    return NextResponse.next();
-  }
-
-  // For admin routes, redirect non-admin users to home
-  if (isAdminRoute(req)) {
-    const homeUrl = new URL("/", req.url);
-    return NextResponse.redirect(homeUrl);
-  }
-
-  // For non-admin routes, check if user is approved
+  // Check if user is approved first (for all routes)
   const checkApprovalUrl = new URL('/api/auth/check-approval', req.url);
   const approvalResponse = await fetch(checkApprovalUrl, {
     headers: { 'Cookie': req.headers.get('Cookie') || '' },
   });
 
+  let isApproved = false;
   if (approvalResponse.ok) {
-    const { isApproved } = await approvalResponse.json();
-    
-    if (!isApproved && req.nextUrl.pathname !== '/onboarding') {
-      const onboardingUrl = new URL("/onboarding", req.url);
-      return NextResponse.redirect(onboardingUrl);
-    } else {
-      return NextResponse.next();
+    const approvalData = await approvalResponse.json();
+    isApproved = approvalData.isApproved;
+  }
+
+  // Check if user is admin in Clerk metadata
+  const { isAdmin } = await import('./lib/isAdmin');
+  const isUserAdmin = await isAdmin(userId);
+  
+  // For admin routes, only allow if user is both approved AND admin
+  if (isAdminRoute(req)) {
+    if (!isApproved || !isUserAdmin) {
+      const homeUrl = new URL("/", req.url);
+      return NextResponse.redirect(homeUrl);
     }
+    return NextResponse.next();
+  }
+
+  // For non-admin routes, check if user is approved
+  if (!isApproved && req.nextUrl.pathname !== '/onboarding') {
+    const onboardingUrl = new URL("/onboarding", req.url);
+    return NextResponse.redirect(onboardingUrl);
   }
 
   return NextResponse.next();

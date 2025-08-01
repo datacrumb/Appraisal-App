@@ -26,14 +26,15 @@ import Image from "next/image";
 interface Question {
   id: string;
   label: string;
-  type: "rating" | "multiple-choice" | "text" | "select" | "tel";
+  type: "rating" | "multiple-choice" | "text" | "select" | "tel" | "file";
   options?: string[];
   section: string;
+  optional?: boolean;
 }
 
 interface AppraisalFormProps {
   questions: Question[];
-  onSubmit?: (answers: Record<string, string>) => Promise<void>;
+  onSubmit?: (answers: Record<string, string | File>) => Promise<void>;
   formTitle?: string;
   formDescription?: string;
   evaluationTarget?: {
@@ -61,41 +62,52 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
 }) => {
   // Create dynamic Zod schema based on questions
   const createValidationSchema = () => {
-    const schemaFields: Record<string, z.ZodString> = {};
+    const schemaFields: Record<string, z.ZodString | z.ZodOptional<z.ZodString> | z.ZodAny> = {};
 
     questions.forEach(question => {
-      let fieldSchema = z.string().min(1, `${question.label} is required`);
+      if (question.type === "file") {
+        // File fields don't need validation in the schema
+        schemaFields[question.id] = z.any();
+      } else {
+        let fieldSchema: z.ZodString | z.ZodOptional<z.ZodString>;
+        
+        if (question.optional) {
+          fieldSchema = z.string().optional();
+        } else {
+          fieldSchema = z.string().min(1, `${question.label} is required`);
+        }
 
-      if (question.type === "rating") {
-        fieldSchema = fieldSchema.refine(
-          (val) => ["1", "2", "3", "4", "5"].includes(val),
-          { message: "Please select a rating between 1 and 5" }
-        );
-      } else if ((question.type === "multiple-choice" || question.type === "select") && question.options) {
-        fieldSchema = fieldSchema.refine(
-          (val) => question.options!.includes(val),
-          { message: `Please select one of the available options` }
-        );
-      } else if (question.type === "tel") {
-        fieldSchema = fieldSchema.refine(
-          (val) => /^[\+]?[1-9][\d]{0,15}$/.test(val.replace(/\s/g, '')),
-          { message: "Please enter a valid phone number" }
-        );
+        if (question.type === "rating") {
+          fieldSchema = fieldSchema.refine(
+            (val: string | undefined) => !val || ["1", "2", "3", "4", "5"].includes(val),
+            { message: "Please select a rating between 1 and 5" }
+          );
+        } else if ((question.type === "multiple-choice" || question.type === "select") && question.options) {
+          fieldSchema = fieldSchema.refine(
+            (val: string | undefined) => !val || question.options!.includes(val),
+            { message: `Please select one of the available options` }
+          );
+        } else if (question.type === "tel") {
+          fieldSchema = fieldSchema.refine(
+            (val: string | undefined) => !val || /^[\+]?[1-9][\d]{0,15}$/.test(val.replace(/\s/g, '')),
+            { message: "Please enter a valid phone number" }
+          );
+        }
+
+        schemaFields[question.id] = fieldSchema;
       }
-
-      schemaFields[question.id] = fieldSchema;
     });
 
     return z.object(schemaFields);
   };
 
   const validationSchema = createValidationSchema();
-  type FormData = z.infer<typeof validationSchema>;
+  type FormData = z.infer<typeof validationSchema> & Record<string, string | File | null>;
 
   const initialValues = readOnly ? defaultValues : questions.reduce((acc, q) => {
-    acc[q.id] = "";
+    acc[q.id] = q.type === "file" ? null : "";
     return acc;
-  }, {} as Record<string, string>);
+  }, {} as Record<string, string | null>);
 
   const methods = useForm<FormData>({
     defaultValues: initialValues,
@@ -125,9 +137,18 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   const watchedValues = watch();
 
   // Calculate progress
-  const totalQuestions = questions.length;
-  const answeredQuestions = Object.values(watchedValues).filter(value => value !== "").length;
-  const progress = (answeredQuestions / totalQuestions) * 100;
+  const requiredQuestions = questions.filter(q => !q.optional).length;
+  const answeredRequiredQuestions = questions
+    .filter(q => !q.optional)
+    .filter(q => {
+      const value = watchedValues[q.id];
+      if (q.type === "file") {
+        return value && value instanceof File;
+      }
+      return value && typeof value === 'string' && value.trim() !== '';
+    })
+    .length;
+  const progress = requiredQuestions > 0 ? (answeredRequiredQuestions / requiredQuestions) * 100 : 100;
 
   // Check if current section is complete
   const isCurrentSectionComplete = () => {
@@ -136,7 +157,17 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
 
     return currentQuestions.every(question => {
       const answer = currentAnswers[question.id];
-      return answer && answer.trim() !== '';
+      
+      // If question is optional, it's always considered complete
+      if (question.optional) {
+        return true;
+      }
+      
+      // For required questions, check if they have valid answers
+      if (question.type === "file") {
+        return answer && answer instanceof File;
+      }
+      return answer && typeof answer === 'string' && answer.trim() !== '';
     });
   };
 
@@ -145,7 +176,17 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
     const allAnswers = watch();
     return questions.every(question => {
       const answer = allAnswers[question.id];
-      return answer && answer.trim() !== '';
+      
+      // If question is optional, it's always considered complete
+      if (question.optional) {
+        return true;
+      }
+      
+      // For required questions, check if they have valid answers
+      if (question.type === "file") {
+        return answer && answer instanceof File;
+      }
+      return answer && typeof answer === 'string' && answer.trim() !== '';
     });
   };
 
@@ -156,11 +197,17 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   };
 
   const handleFormSubmit = async (data: FormData) => {
+    console.log('Form submission triggered with data:', data);
     if (readOnly || !onSubmit) return;
     
     setLoading(true);
     try {
-      await onSubmit(data);
+      // Filter out undefined values for optional fields
+      const cleanData = Object.fromEntries(
+        Object.entries(data).filter(([_, value]) => value !== undefined)
+      ) as Record<string, string>;
+      
+      await onSubmit(cleanData);
       reset();
     } catch (e) {
       // error handled in parent
@@ -170,6 +217,10 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
   };
 
   const nextSection = () => {
+    console.log('Next button clicked, current section:', currentSection);
+    console.log('Is current section complete:', isCurrentSectionComplete());
+    console.log('Is current section valid:', isCurrentSectionValid());
+    
     if (currentSection < sectionNames.length - 1) {
       setCurrentSection(currentSection + 1);
     }
@@ -274,6 +325,26 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                     readOnly={readOnly}
                   />
                 )}
+
+                {question.type === "file" && (
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        field.onChange(file);
+                      }}
+                      className={`w-full p-2 border border-gray-300 rounded-none text-gray-900 ${readOnly ? 'bg-gray-50 cursor-default' : ''}`}
+                      disabled={loading || readOnly}
+                    />
+                    {field.value && (
+                      <div className="text-sm text-gray-600">
+                        Selected: {field.value instanceof File ? field.value.name : field.value}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </FormControl>
             <FormMessage />
@@ -345,38 +416,6 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                     </div>
                   ))}
 
-                  {/* Navigation */}
-                  <div className="flex justify-end gap-2 pt-6">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={previousSection}
-                      disabled={currentSection === 0}
-                      className="px-6 py-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-none"
-                    >
-                      Previous
-                    </Button>
-
-                    {currentSection < sectionNames.length - 1 ? (
-                      <Button
-                        type="button"
-                        onClick={nextSection}
-                        disabled={readOnly ? false : (!isCurrentSectionComplete() || !isCurrentSectionValid())}
-                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Next
-                      </Button>
-                    ) : !readOnly ? (
-                      <Button
-                        type="submit"
-                        disabled={loading || !isValid}
-                        className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {loading ? "Submitting..." : "Submit"}
-                      </Button>
-                    ) : null}
-                  </div>
-
                   {/* Progress */}
                   <div className="mb-8">
                     <div className="flex justify-between items-center mb-2">
@@ -384,12 +423,48 @@ const AppraisalForm: React.FC<AppraisalFormProps> = ({
                         {Math.round(progress)}% completed
                       </span>
                       <span className="text-sm text-gray-500">
-                        {answeredQuestions} of {totalQuestions} questions
+                        {answeredRequiredQuestions} of {requiredQuestions} required questions
                       </span>
                     </div>
                     <Progress value={progress} className="h-2 text-black" />
                   </div>
                 </form>
+
+                {/* Navigation - Outside the form to prevent submission */}
+                <div className="flex justify-end gap-2 pt-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={previousSection}
+                    disabled={currentSection === 0}
+                    className="px-6 py-2 border-gray-300 text-gray-900 hover:bg-gray-50 rounded-none"
+                  >
+                    Previous
+                  </Button>
+
+                  {currentSection < sectionNames.length - 1 ? (
+                    <Button
+                      type="button"
+                      onClick={nextSection}
+                      disabled={readOnly ? false : (!isCurrentSectionComplete() || !isCurrentSectionValid())}
+                      className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </Button>
+                  ) : !readOnly ? (
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        console.log('Submit button clicked');
+                        handleSubmit(handleFormSubmit)();
+                      }}
+                      disabled={loading || !isValid}
+                      className="px-6 py-2 bg-black text-white hover:bg-gray-800 rounded-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? "Submitting..." : "Submit"}
+                    </Button>
+                  ) : null}
+                </div>
               </>
             </FormProvider>
           </div>

@@ -215,7 +215,7 @@ const Assignments = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-8"
             />
-              </div>
+          </div>
             )}
       </div>
 

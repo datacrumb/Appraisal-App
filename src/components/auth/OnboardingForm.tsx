@@ -8,9 +8,10 @@ import AppraisalForm from "@/components/Form";
 interface OnboardingQuestion {
   id: string;
   label: string;
-  type: "rating" | "multiple-choice" | "text" | "select" | "tel";
+  type: "rating" | "multiple-choice" | "text" | "select" | "tel" | "file";
   options?: string[];
   section: string;
+  optional?: boolean;
 }
 
 // Static departments
@@ -38,6 +39,7 @@ const roles = [
   "Operations Manager",
   "Financial Analyst",
   "HR Specialist",
+  "Technical Director",
   "CEO",
   "CTO",
   "CFO",
@@ -47,6 +49,7 @@ export function OnboardingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [managers, setManagers] = useState<Array<{userId: string, name: string}>>([]);
+  const [leads, setLeads] = useState<Array<{userId: string, name: string}>>([]);
   const [selectedDepartment, setSelectedDepartment] = useState<string>("");
   
   // Check if user has already submitted
@@ -68,21 +71,27 @@ export function OnboardingForm() {
     checkSubmissionStatus();
   }, []);
 
-  // Fetch managers on component mount
+  // Fetch managers and leads on component mount
   useEffect(() => {
-    const fetchManagers = async () => {
+    const fetchManagersAndLeads = async () => {
       try {
         const managersResponse = await fetch("/api/managers");
         if (managersResponse.ok) {
           const managersData = await managersResponse.json();
           setManagers(managersData.managers);
         }
+        
+        const leadsResponse = await fetch("/api/leads");
+        if (leadsResponse.ok) {
+          const leadsData = await leadsResponse.json();
+          setLeads(leadsData.leads);
+        }
       } catch (error) {
-        console.error("Error fetching managers:", error);
+        console.error("Error fetching managers and leads:", error);
       }
     };
     
-    fetchManagers();
+    fetchManagersAndLeads();
   }, []);
 
   // Fetch managers when department changes
@@ -102,16 +111,22 @@ export function OnboardingForm() {
     }
   };
 
-  const onSubmit = async (answers: Record<string, string>) => {
+  const onSubmit = async (answers: Record<string, string | File>) => {
     setIsSubmitting(true);
     try {
       const formData = new FormData();
-      formData.append('department', answers.department);
-      formData.append('role', answers.role);
-      formData.append('phoneNumber', answers.phoneNumber || '');
-      formData.append('isManager', answers.isManager || 'false');
-      formData.append('isLead', answers.isLead || 'false');
-      formData.append('manager', answers.manager || '');
+      formData.append('department', answers.department as string);
+      formData.append('role', answers.role as string);
+      formData.append('phoneNumber', (answers.phoneNumber as string) || '');
+      formData.append('isManager', (answers.isManager as string) || 'false');
+      formData.append('isLead', (answers.isLead as string) || 'false');
+      formData.append('manager', (answers.manager as string) || '');
+      formData.append('lead', (answers.lead as string) || '');
+      
+      // Handle profile picture file upload
+      if (answers.profilePicture && answers.profilePicture instanceof File) {
+        formData.append('profilePicture', answers.profilePicture);
+      }
 
       const response = await fetch("/api/onboarding", {
         method: "POST",
@@ -168,6 +183,12 @@ export function OnboardingForm() {
       section: "Basic Information"
     },
     {
+      id: "profilePicture",
+      label: "Upload your profile picture",
+      type: "file",
+      section: "Contact Information"
+    },
+    {
       id: "phoneNumber",
       label: "What is your phone number?",
       type: "tel",
@@ -191,8 +212,17 @@ export function OnboardingForm() {
       id: "manager",
       label: "Who is your manager? (Optional)",
       type: "select",
-      options: managers.map(m => m.name),
-      section: "Reporting"
+      options: ["None", ...managers.map(m => m.name)],
+      section: "Reporting",
+      optional: true
+    },
+    {
+      id: "lead",
+      label: "Who is your lead? (Optional)",
+      type: "select",
+      options: ["None", ...leads.map(l => l.name)],
+      section: "Reporting",
+      optional: true
     }
   ];
 
