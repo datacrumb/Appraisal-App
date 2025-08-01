@@ -27,7 +27,7 @@ const HoursWeeksCard = () => {
         } else if (random > 0.4) {
           status = 'leave'; // 30% chance (yellow)
         } else {
-          status = 'absent'; // 40% chance (gray)
+          status = 'holiday'; // 40% chance (gray)
         }
         monthData.push({ day, status });
       }
@@ -45,7 +45,7 @@ const HoursWeeksCard = () => {
         return 'bg-[#10b981]';
       case 'leave':
         return 'bg-yellow-200';
-      case 'absent':
+      case 'holiday':
       default:
         return 'bg-gray-300';
     }
@@ -111,7 +111,7 @@ const HoursWeeksCard = () => {
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-300 rounded-sm"></div>
               </div>
-              <span className="text-xs text-gray-600">Absent</span>
+              <span className="text-xs text-gray-600">Holiday</span>
             </div>
           </div>
         </div>

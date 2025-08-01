@@ -37,7 +37,7 @@ const LearningDevelopmentCard = () => {
       title: 'AIOPS Deployment',
       type: 'webinar',
       status: 'upcoming',
-      color: 'bg-yellow-400',
+      color: 'bg-yellow-500',
       link: '#'
     }
   ];
@@ -90,11 +90,7 @@ const LearningDevelopmentCard = () => {
             <span className="text-xs text-gray-600">Completed</span>
             <div className="flex items-center gap-1">
               <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-500 rounded-sm"></div>
-              <span className="text-xs text-gray-600">In progress</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 sm:w-4 sm:h-4 bg-yellow-400 rounded-sm"></div>
-              <span className="text-xs text-gray-600">Upcoming</span>
+              <span className="text-xs text-gray-600">Pending</span>
             </div>
           </div>
         </div>
