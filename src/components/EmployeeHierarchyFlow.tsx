@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import ReactFlow, {
   Background,
   Controls,
-  MiniMap,
   type Node,
   type Edge,
   Position,
@@ -14,13 +13,14 @@ import "reactflow/dist/style.css";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, FileText, CheckCircle, XCircle } from "lucide-react";
+import { RefreshCw, FileText, CheckCircle, XCircle, Search, X } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 import { useUser } from "@clerk/nextjs";
 
 interface Employee {
@@ -125,23 +125,10 @@ export default function EmployeeHierarchyFlow() {
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [assigningForms, setAssigningForms] = useState(false);
   const [assignmentSuccess, setAssignmentSuccess] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [highlightedNode, setHighlightedNode] = useState<string | null>(null);
   const { user } = useUser();
-
-  // Function to recalculate layout
-  const recalculateLayout = () => {
-    if (nodes.length > 0 && edges.length > 0) {
-      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(nodes, edges);
-      setNodes(layoutedNodes);
-      setEdges(layoutedEdges);
-
-      // Fit view after layout recalculation
-      setTimeout(() => {
-        if (reactFlowInstance) {
-          reactFlowInstance.fitView({ padding: 0.1 });
-        }
-      }, 100);
-    }
-  };
 
   // Function to trigger form assignments
   const triggerFormAssignment = async () => {
@@ -246,14 +233,6 @@ export default function EmployeeHierarchyFlow() {
             background = "#10b981";
             iconBg = "#059669";
             textColor = "#ffffff";
-          }
-          // Highlight selected/hovered
-          if (selectedNode === emp.id) {
-            border = "3px solid #ffffff";
-            background = role === "ADMIN" ? "#0051a2" : role === "MANAGER" ? "#d97706" : "#059669";
-          } else if (hoveredNode === emp.id) {
-            border = "3px solid #ffffff";
-            background = role === "ADMIN" ? "#0051a2" : role === "MANAGER" ? "#d97706" : "#059669";
           }
 
           const fullName = emp.firstName && emp.lastName
@@ -397,6 +376,96 @@ export default function EmployeeHierarchyFlow() {
     }
   }, [nodes.length, edges.length, reactFlowInstance]);
 
+  // Update node styles when highlighting changes
+  useEffect(() => {
+    if (nodes.length > 0) {
+      setNodes(prevNodes => 
+        prevNodes.map(node => {
+          const role = node.data?.label?.props?.children?.[1]?.props?.children?.[1]?.props?.children || "EMPLOYEE";
+          let border, background, boxShadow;
+          
+          // Get base styling based on role
+          if (role === "ADMIN") {
+            border = "3px solid #0070f3";
+            background = "#0070f3";
+          } else if (role === "MANAGER") {
+            border = "2px solid #f59e42";
+            background = "#f59e42";
+          } else if (role === "LEAD") {
+            border = "2px solid #42a5f5";
+            background = "#42a5f5";
+          } else if (role === "COLLEAGUE") {
+            border = "2px solid #6366f1";
+            background = "#6366f1";
+          } else {
+            border = "1px solid #10b981";
+            background = "#10b981";
+          }
+
+          // Apply highlighting
+          if (highlightedNode === node.id) {
+            border = "4px solid #ff6b6b";
+            boxShadow = "0 0 0 4px #ff6b6b, 0 8px 25px rgba(255, 107, 107, 0.3)";
+            // Darken background for highlighted nodes
+            if (role === "ADMIN") {
+              background = "#0051a2";
+            } else if (role === "MANAGER") {
+              background = "#d97706";
+            } else if (role === "LEAD") {
+              background = "#1976d2";
+            } else if (role === "COLLEAGUE") {
+              background = "#4f46e5";
+            } else {
+              background = "#059669";
+            }
+          } else if (selectedNode === node.id) {
+            border = "3px solid #ffffff";
+            boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            // Darken background for selected nodes
+            if (role === "ADMIN") {
+              background = "#0051a2";
+            } else if (role === "MANAGER") {
+              background = "#d97706";
+            } else if (role === "LEAD") {
+              background = "#1976d2";
+            } else if (role === "COLLEAGUE") {
+              background = "#4f46e5";
+            } else {
+              background = "#059669";
+            }
+          } else if (hoveredNode === node.id) {
+            border = "3px solid #ffffff";
+            boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            // Darken background for hovered nodes
+            if (role === "ADMIN") {
+              background = "#0051a2";
+            } else if (role === "MANAGER") {
+              background = "#d97706";
+            } else if (role === "LEAD") {
+              background = "#1976d2";
+            } else if (role === "COLLEAGUE") {
+              background = "#4f46e5";
+            } else {
+              background = "#059669";
+            }
+          } else {
+            boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+          }
+
+          return {
+            ...node,
+            style: {
+              ...node.style,
+              border,
+              background,
+              boxShadow,
+            },
+          };
+        })
+      );
+    }
+  }, [highlightedNode, selectedNode, nodes.length]);
+
   // Tooltip logic
   const handleNodeMouseEnter = (event: React.MouseEvent, node: Node) => {
     setHoveredNode(node.id);
@@ -416,6 +485,47 @@ export default function EmployeeHierarchyFlow() {
   };
 
   const admin = user?.publicMetadata?.role === "admin";
+
+  // Search functionality
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setSearchResults([]);
+      setHighlightedNode(null);
+      return;
+    }
+
+    const results = nodes
+      .filter(node => {
+        const fullName = node.data?.label?.props?.children?.[1]?.props?.children?.[0]?.props?.children || "";
+        return fullName.toLowerCase().startsWith(query.toLowerCase());
+      })
+      .map(node => node.id);
+
+    setSearchResults(results);
+    
+    if (results.length > 0) {
+      setHighlightedNode(results[0]);
+      // Zoom to the first result
+      setTimeout(() => {
+        if (reactFlowInstance) {
+          reactFlowInstance.fitView({
+            nodes: [{ id: results[0] }],
+            padding: 0.2,
+            duration: 800
+          });
+        }
+      }, 100);
+    } else {
+      setHighlightedNode(null);
+    }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setHighlightedNode(null);
+  };
 
   // Skeleton component for hierarchy loading
   const HierarchySkeleton = () => (
@@ -490,47 +600,105 @@ export default function EmployeeHierarchyFlow() {
 
         <Controls />
         <Background />
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={recalculateLayout}
-          className="absolute top-4 left-4 z-10"
-        >
-          <RefreshCw className="h-6 w-6" />
-        </Button>
+        {/* Search Bar */}
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white rounded-lg shadow-lg border border-gray-200 px-3">
+          <Search className="h-4 w-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Search employees..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-48 h-8 border-0 focus:ring-0 focus:outline-none text-sm"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearSearch}
+              className="h-6 w-6 p-0 hover:bg-gray-100"
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+
+        {/* Auto-Assign Forms Button */}
         {admin && (
-          < TooltipProvider >
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={triggerFormAssignment}
-                disabled={assigningForms}
-                className="absolute top-4 right-4 z-10 bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-              >
-                {assigningForms ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : assignmentSuccess ? (
-                  <CheckCircle className="h-4 w-4" />
-                ) : (
-                  <FileText className="h-4 w-4" />
-                )}
-                <span className="ml-2 font-medium">
-                  {assigningForms ? "Assigning..." : assignmentSuccess ? "Assigned!" : "Auto-Assign Forms"}
-                </span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs bg-cyan-700">
-              <div className="space-y-2">
-                <p className="font-medium">Auto-Assign Forms</p>
-                <p className="text-sm text-gray-200">
-                  Automatically assigns Manager forms to managers and Employee forms to their direct reports based on the hierarchy.
-                </p>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={triggerFormAssignment}
+                  disabled={assigningForms}
+                  className="absolute top-4 right-4 z-10 bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                >
+                  {assigningForms ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : assignmentSuccess ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <FileText className="h-4 w-4" />
+                  )}
+                  <span className="ml-2 font-medium">
+                    {assigningForms ? "Assigning..." : assignmentSuccess ? "Assigned!" : "Auto-Assign Forms"}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs bg-cyan-700">
+                <div className="space-y-2">
+                  <p className="font-medium">Auto-Assign Forms</p>
+                  <p className="text-sm text-gray-200">
+                    Automatically assigns Manager forms to managers and Employee forms to their direct reports based on the hierarchy.
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
+        {/* Search Results Indicator */}
+        {searchResults.length > 0 && (
+          <div className="absolute top-16 left-4 z-10 bg-white rounded-lg shadow-lg border border-gray-200 px-3 py-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Search className="h-4 w-4 text-blue-500" />
+              <span className="text-gray-600">
+                Found {searchResults.length} result{searchResults.length > 1 ? 's' : ''}
+              </span>
+              {searchResults.length > 1 && (
+                <div className="flex gap-1 items-center justify-center">
+                  {searchResults.slice(0, 3).map((resultId, index) => (
+                    <Button
+                      key={resultId}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setHighlightedNode(resultId);
+                        if (reactFlowInstance) {
+                          reactFlowInstance.fitView({
+                            nodes: [{ id: resultId }],
+                            padding: 0.2,
+                            duration: 800
+                          });
+                        }
+                      }}
+                      className={`h-6 px-2 text-xs ${
+                        highlightedNode === resultId 
+                          ? 'bg-blue-100 text-blue-700' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {index + 1}
+                    </Button>
+                  ))}
+                  {searchResults.length > 3 && (
+                    <span className="text-xs text-gray-400">+{searchResults.length - 3}</span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
         )}
       {/* Success Message */}
       {assignmentSuccess && (
