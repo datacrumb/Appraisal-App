@@ -935,7 +935,7 @@ export default function EmployeeHierarchyFlow() {
                   size="sm"
                   onClick={triggerFormAssignment}
                   disabled={assigningForms}
-                  className="absolute top-4 right-4 z-10 bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                  className="absolute top-4 right-4 z-10 bg-black text-white shadow-lg"
                 >
                   {assigningForms ? (
                     <RefreshCw className="h-4 w-4 animate-spin" />
@@ -949,7 +949,7 @@ export default function EmployeeHierarchyFlow() {
                   </span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent className="max-w-xs bg-cyan-700">
+              <TooltipContent className="max-w-xs bg-black">
                 <div className="space-y-2">
                   <p className="font-medium">Auto-Assign Forms</p>
                   <p className="text-sm text-gray-200">
