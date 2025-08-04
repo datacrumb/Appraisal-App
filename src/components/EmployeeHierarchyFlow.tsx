@@ -271,52 +271,54 @@ export default function EmployeeHierarchyFlow() {
               ? `${emp.firstName} ${emp.lastName}`
               : emp.email;
 
-            return {
-              id: emp.id,
-              data: {
-                label: (
-                  <div style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "12px 8px",
-                    textAlign: "center"
-                  }}>
-                    <Avatar className="w-28 h-28 rounded-lg">
-                      <AvatarImage
-                        src={getProfilePictureUrl(emp) || undefined}
-                        alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
-                      />
-                      <AvatarFallback
-                        className="text-white font-bold text-xl rounded-lg"
-                        style={{ backgroundColor: iconBg }}
-                      >
-                        {getInitials(emp.firstName, emp.lastName, emp.email)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <span style={{
-                        fontWeight: "bold",
-                        fontSize: "14px",
-                        color: textColor,
-                        marginBottom: "2px"
-                      }}>
-                        {fullName}
-                      </span>
-                      <span style={{
-                        fontSize: "12px",
-                        color: textColor,
-                        fontWeight: "500"
-                      }}>
-                        {role}
-                      </span>
-                    </div>
-                  </div>
-                ),
-                department: emp.department, // Store department info
-                role: role, // Store role info
-              },
+              return {
+               id: emp.id,
+               data: {
+                 label: (
+                   <div style={{
+                     display: "flex",
+                     flexDirection: "column",
+                     alignItems: "center",
+                     gap: 8,
+                     padding: "12px 8px",
+                     textAlign: "center"
+                   }}>
+                     <Avatar className="w-28 h-28 rounded-lg">
+                       <AvatarImage
+                         src={getProfilePictureUrl(emp) || undefined}
+                         alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
+                       />
+                       <AvatarFallback
+                         className="text-white font-bold text-xl rounded-lg"
+                         style={{ backgroundColor: iconBg }}
+                       >
+                         {getInitials(emp.firstName, emp.lastName, emp.email)}
+                       </AvatarFallback>
+                     </Avatar>
+                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                       <span style={{
+                         fontWeight: "bold",
+                         fontSize: "14px",
+                         color: textColor,
+                         marginBottom: "2px"
+                       }}>
+                         {fullName}
+                       </span>
+                       <span style={{
+                         fontSize: "12px",
+                         color: textColor,
+                         fontWeight: "500"
+                       }}>
+                         {role}
+                       </span>
+                     </div>
+                   </div>
+                 ),
+                 department: emp.department, // Store department info
+                 role: role, // Store role info
+                 fullName: fullName, // Store full name for search
+                 employee: emp, // Store the full employee object for debugging
+               },
               position: { x: 0, y: 0 }, // Will be calculated by dagre
               style: {
                 border,
@@ -752,7 +754,7 @@ export default function EmployeeHierarchyFlow() {
     setTooltip({
       x: rect.left + rect.width / 2,
       y: rect.top - 8,
-      label: node.data?.label?.props?.children?.[1]?.props?.children?.[0]?.props?.children || node.id,
+      label: node.data?.fullName || node.id,
     });
   };
   const handleNodeMouseLeave = () => {
@@ -774,13 +776,34 @@ export default function EmployeeHierarchyFlow() {
       return;
     }
 
+    console.log("Search query:", query);
+    console.log("Available nodes:", nodes.map(n => ({ 
+      id: n.id, 
+      fullName: n.data?.fullName,
+      employee: n.data?.employee 
+    })));
+
     const results = nodes
       .filter(node => {
-        const fullName = node.data?.label?.props?.children?.[1]?.props?.children?.[0]?.props?.children || "";
-        return fullName.toLowerCase().startsWith(query.toLowerCase());
+        // Skip executive department box node
+        if (node.id === 'executive-department-box') return false;
+        
+        // Try to get fullName from multiple sources
+        let fullName = node.data?.fullName || "";
+        if (!fullName && node.data?.employee) {
+          const emp = node.data.employee;
+          fullName = emp.firstName && emp.lastName
+            ? `${emp.firstName} ${emp.lastName}`
+            : emp.email;
+        }
+        
+        const matches = fullName.toLowerCase().startsWith(query.toLowerCase());
+        console.log(`Node ${node.id}: "${fullName}" matches "${query}" = ${matches}`);
+        return matches;
       })
       .map(node => node.id);
 
+    console.log("Search results:", results);
     setSearchResults(results);
 
     if (results.length > 0) {
