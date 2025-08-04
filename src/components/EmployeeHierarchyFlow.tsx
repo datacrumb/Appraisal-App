@@ -22,6 +22,12 @@ import {
 } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@clerk/nextjs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface Employee {
   id: string;
@@ -106,15 +112,15 @@ function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
     marginy: 50,
   });
 
-     // Add nodes to the graph
-   nodes.forEach((node) => {
-     // Use larger dimensions for executive department box node
-     if (node.id === 'executive-department-box') {
-       dagreGraph.setNode(node.id, { width: 320, height: 280 });
-     } else {
-       dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
-     }
-   });
+  // Add nodes to the graph
+  nodes.forEach((node) => {
+    // Use larger dimensions for executive department box node
+    if (node.id === 'executive-department-box') {
+      dagreGraph.setNode(node.id, { width: 320, height: 280 });
+    } else {
+      dagreGraph.setNode(node.id, { width: nodeWidth, height: nodeHeight });
+    }
+  });
 
   // Add edges to the graph
   edges.forEach((edge) => {
@@ -124,13 +130,13 @@ function getLayoutedElements(nodes: Node[], edges: Edge[], direction = "TB") {
   // Calculate the layout
   dagre.layout(dagreGraph);
 
-     // Apply the calculated positions to the nodes
-   const layoutedNodes = nodes.map((node) => {
-     const nodeWithPosition = dagreGraph.node(node.id);
-     const isExecutiveBox = node.id === 'executive-department-box';
-     const width = isExecutiveBox ? 320 : nodeWidth;
-     const height = isExecutiveBox ? 280 : nodeHeight;
-    
+  // Apply the calculated positions to the nodes
+  const layoutedNodes = nodes.map((node) => {
+    const nodeWithPosition = dagreGraph.node(node.id);
+    const isExecutiveBox = node.id === 'executive-department-box';
+    const width = isExecutiveBox ? 320 : nodeWidth;
+    const height = isExecutiveBox ? 280 : nodeHeight;
+
     return {
       ...node,
       targetPosition: isHorizontal ? Position.Left : Position.Top,
@@ -237,111 +243,111 @@ export default function EmployeeHierarchyFlow() {
         // Find Executive department employees (CEOs, Technical Directors, etc.)
         const executiveDepartmentEmployees = employees.filter(emp => emp.department === 'Executive');
 
-                 // Map employees to nodes (excluding Executive department employees and ensuring they're not shown individually)
-         const nodes: Node[] = employees
-           .filter(emp => emp.department !== 'Executive') // Exclude Executive department employees from individual nodes
-           .map((emp) => {
-           const role = roleMap[emp.id] || "EMPLOYEE";
-           const deptColor = getDepartmentColor(emp.department);
-           let border, background, fontWeight, iconBg, textColor;
-           
-           // Use department colors for all nodes
-           border = `2px solid ${deptColor.border}`;
-           background = deptColor.background;
-           iconBg = deptColor.iconBg;
-           textColor = "#ffffff";
-           
-           // Special styling for admin role
-           if (role === "ADMIN") {
-             border = "3px solid #0070f3";
-             background = "#0070f3";
-             fontWeight = "bold";
-             iconBg = "#0051a2";
-           } else {
-             fontWeight = "normal";
-           }
+        // Map employees to nodes (excluding Executive department employees and ensuring they're not shown individually)
+        const nodes: Node[] = employees
+          .filter(emp => emp.department !== 'Executive') // Exclude Executive department employees from individual nodes
+          .map((emp) => {
+            const role = roleMap[emp.id] || "EMPLOYEE";
+            const deptColor = getDepartmentColor(emp.department);
+            let border, background, fontWeight, iconBg, textColor;
 
-          const fullName = emp.firstName && emp.lastName
-            ? `${emp.firstName} ${emp.lastName}`
-            : emp.email;
+            // Use department colors for all nodes
+            border = `2px solid ${deptColor.border}`;
+            background = deptColor.background;
+            iconBg = deptColor.iconBg;
+            textColor = "#ffffff";
 
-                     return {
-             id: emp.id,
-             data: {
-               label: (
-                 <div style={{
-                   display: "flex",
-                   flexDirection: "column",
-                   alignItems: "center",
-                   gap: 8,
-                   padding: "12px 8px",
-                   textAlign: "center"
-                 }}>
-                   <Avatar className="w-28 h-28 rounded-lg">
-                     <AvatarImage
-                       src={getProfilePictureUrl(emp) || undefined}
-                       alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
-                     />
-                     <AvatarFallback
-                       className="text-white font-bold text-xl rounded-lg"
-                       style={{ backgroundColor: iconBg }}
-                     >
-                       {getInitials(emp.firstName, emp.lastName, emp.email)}
-                     </AvatarFallback>
-                   </Avatar>
-                   <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                     <span style={{
-                       fontWeight: "bold",
-                       fontSize: "14px",
-                       color: textColor,
-                       marginBottom: "2px"
-                     }}>
-                       {fullName}
-                     </span>
-                     <span style={{
-                       fontSize: "12px",
-                       color: textColor,
-                       fontWeight: "500"
-                     }}>
-                       {role}
-                     </span>
-                   </div>
-                 </div>
-               ),
-               department: emp.department, // Store department info
-               role: role, // Store role info
-             },
-            position: { x: 0, y: 0 }, // Will be calculated by dagre
-            style: {
-              border,
-              background,
-              minWidth: 160,
-              minHeight: 140,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              borderRadius: 12,
-              cursor: "pointer",
-              transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
-              padding: 0,
-            },
-          };
-        });
+            // Special styling for admin role
+            if (role === "ADMIN") {
+              border = "3px solid #0070f3";
+              background = "#0070f3";
+              fontWeight = "bold";
+              iconBg = "#0051a2";
+            } else {
+              fontWeight = "normal";
+            }
+
+            const fullName = emp.firstName && emp.lastName
+              ? `${emp.firstName} ${emp.lastName}`
+              : emp.email;
+
+            return {
+              id: emp.id,
+              data: {
+                label: (
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "12px 8px",
+                    textAlign: "center"
+                  }}>
+                    <Avatar className="w-28 h-28 rounded-lg">
+                      <AvatarImage
+                        src={getProfilePictureUrl(emp) || undefined}
+                        alt={`${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email}
+                      />
+                      <AvatarFallback
+                        className="text-white font-bold text-xl rounded-lg"
+                        style={{ backgroundColor: iconBg }}
+                      >
+                        {getInitials(emp.firstName, emp.lastName, emp.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <span style={{
+                        fontWeight: "bold",
+                        fontSize: "14px",
+                        color: textColor,
+                        marginBottom: "2px"
+                      }}>
+                        {fullName}
+                      </span>
+                      <span style={{
+                        fontSize: "12px",
+                        color: textColor,
+                        fontWeight: "500"
+                      }}>
+                        {role}
+                      </span>
+                    </div>
+                  </div>
+                ),
+                department: emp.department, // Store department info
+                role: role, // Store role info
+              },
+              position: { x: 0, y: 0 }, // Will be calculated by dagre
+              style: {
+                border,
+                background,
+                minWidth: 160,
+                minHeight: 140,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight,
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                borderRadius: 12,
+                cursor: "pointer",
+                transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
+                padding: 0,
+              },
+            };
+          });
 
         // Create edges based on hierarchy: Executive Department Box → Manager → Executive Role → Employee
         const edges: Edge[] = [];
-        
+
         // Get all employees by role
         const managerEmployees = employees.filter(emp => roleMap[emp.id] === "MANAGER");
-        const executiveRoleEmployees = employees.filter(emp => 
+        const executiveRoleEmployees = employees.filter(emp =>
           emp.isLead && emp.department !== 'Executive'
         );
-        const employeeRoleEmployees = employees.filter(emp => 
+        const employeeRoleEmployees = employees.filter(emp =>
           roleMap[emp.id] === "EMPLOYEE" && emp.department !== 'Executive'
         );
-        
+
         // 1. Connect Executive Department Box to Managers
         if (executiveDepartmentEmployees.length > 0 && managerEmployees.length > 0) {
           managerEmployees.forEach((manager) => {
@@ -358,14 +364,14 @@ export default function EmployeeHierarchyFlow() {
             });
           });
         }
-        
+
         // 2. Connect Managers to Executive roles
         managerEmployees.forEach((manager) => {
           // Find executives that report to this manager
-          const managerRelations = relations.filter(rel => 
+          const managerRelations = relations.filter(rel =>
             rel.fromId === manager.id && rel.type === "EXECUTIVE"
           );
-          
+
           managerRelations.forEach((rel) => {
             const executive = employees.find(emp => emp.id === rel.toId);
             if (executive && executive.department !== 'Executive') {
@@ -383,14 +389,14 @@ export default function EmployeeHierarchyFlow() {
             }
           });
         });
-        
+
         // 3. Connect Executive roles to Employee roles
         executiveRoleEmployees.forEach((executive) => {
           // Find employees that report to this executive
-          const executiveRelations = relations.filter(rel => 
+          const executiveRelations = relations.filter(rel =>
             rel.fromId === executive.id && rel.type === "EXECUTIVE"
           );
-          
+
           executiveRelations.forEach((rel) => {
             const employee = employees.find(emp => emp.id === rel.toId);
             if (employee && employee.department !== 'Executive') {
@@ -408,14 +414,14 @@ export default function EmployeeHierarchyFlow() {
             }
           });
         });
-        
+
         // 3b. Also connect employees to executives based on relations where employee is the target
         employeeRoleEmployees.forEach((employee) => {
           // Find executives that this employee reports to
-          const employeeRelations = relations.filter(rel => 
+          const employeeRelations = relations.filter(rel =>
             rel.toId === employee.id && rel.type === "EXECUTIVE"
           );
-          
+
           employeeRelations.forEach((rel) => {
             const executive = employees.find(emp => emp.id === rel.fromId);
             if (executive && executive.department !== 'Executive' && executive.isLead) {
@@ -433,18 +439,18 @@ export default function EmployeeHierarchyFlow() {
             }
           });
         });
-        
+
         // 4. Connect employees without managers or executives directly to Executive Department Box
         const employeesWithoutSupervisor = employees.filter(emp => {
           if (emp.department === 'Executive' || roleMap[emp.id] === "MANAGER" || roleMap[emp.id] === "EXECUTIVE") return false;
-          
+
           // Check if this employee has any manager or executive relation
           const hasManager = relations.some(rel => rel.toId === emp.id && rel.type === "MANAGER");
           const hasExecutive = relations.some(rel => rel.toId === emp.id && rel.type === "EXECUTIVE");
-          
+
           return !hasManager && !hasExecutive;
         });
-        
+
         if (executiveDepartmentEmployees.length > 0) {
           employeesWithoutSupervisor.forEach((employee) => {
             edges.push({
@@ -460,180 +466,180 @@ export default function EmployeeHierarchyFlow() {
             });
           });
         }
-        
-                 // 5. Connect executives without managers directly to Executive Department Box
-         const executivesWithoutManager = executiveRoleEmployees.filter(executive => {
-           const hasManager = relations.some(rel => rel.toId === executive.id && rel.type === "MANAGER");
-           return !hasManager;
-         });
-         
-         if (executiveDepartmentEmployees.length > 0) {
-           executivesWithoutManager.forEach((executive) => {
-             edges.push({
-               id: `executive-box-to-executive-${executive.id}`,
-               source: 'executive-department-box',
-               target: executive.id,
-               animated: true,
-               style: {
-                 stroke: "#0070f3",
-                 strokeWidth: 2,
-                 strokeDasharray: "3,3",
-               },
-             });
-           });
-         }
-         
-         // 6. Create general hierarchy edges based on relations (fallback for any missed connections)
-         relations.forEach((rel) => {
-           const sourceEmployee = employees.find(emp => emp.id === rel.fromId);
-           const targetEmployee = employees.find(emp => emp.id === rel.toId);
-           
-           if (!sourceEmployee || !targetEmployee) return;
-           
-           // Skip if either employee is in Executive department (handled by Executive box)
-           if (sourceEmployee.department === 'Executive' || targetEmployee.department === 'Executive') return;
-           
-           // Skip if this edge already exists
-           const edgeExists = edges.some(edge => 
-             edge.source === rel.fromId && edge.target === rel.toId
-           );
-           
-           if (edgeExists) return;
-           
-           // Create edge based on relation type
-           let stroke, strokeDasharray;
-           
-           if (rel.type === "MANAGER") {
-             stroke = "#f59e42"; // Manager color
-             strokeDasharray = undefined; // Solid line
-           } else if (rel.type === "EXECUTIVE") {
-             stroke = getDepartmentColor(targetEmployee.department).background;
-             strokeDasharray = "3,3"; // Dashed line
-           } else {
-             stroke = getDepartmentColor(targetEmployee.department).background;
-             strokeDasharray = "2,4"; // Dotted line
-           }
-           
-           edges.push({
-             id: `relation-${rel.id}`,
-             source: rel.fromId,
-             target: rel.toId,
-             animated: true,
-             style: {
-               stroke,
-               strokeWidth: 2,
-               strokeDasharray,
-             },
-           });
-         });
 
-                 // Create Executive department box node with individual executive nodes inside
-         const executiveBoxNode: Node = {
-           id: 'executive-department-box',
-           position: { x: 0, y: 0 }, // Will be calculated by dagre
-           data: {
-             label: (
-               <div style={{
-                 display: "flex",
-                 flexDirection: "column",
-                 alignItems: "center",
-                 gap: 16,
-                 padding: "20px 16px",
-                 textAlign: "center",
-                 width: "100%",
-                 height: "100%"
-               }}>
-                 <div style={{
-                   fontWeight: "bold",
-                   fontSize: "18px",
-                   color: "#0070f3",
-                   marginBottom: "12px"
-                 }}>
-                   Executive Department
-                 </div>
-                 <div style={{
-                   display: "grid",
-                   gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                   gap: "16px",
-                   width: "100%",
-                   maxHeight: "160px",
-                   overflowY: "auto"
-                 }}>
-                   {executiveDepartmentEmployees.map((executive: Employee) => {
-                     const fullName = executive.firstName && executive.lastName
-                       ? `${executive.firstName} ${executive.lastName}`
-                       : executive.email;
-                     
-                     return (
-                       <div key={executive.id} style={{
-                         display: "flex",
-                         flexDirection: "column",
-                         alignItems: "center",
-                         gap: 6,
-                         padding: "8px",
-                         borderRadius: "8px",
-                         backgroundColor: "#0070f3",
-                         minWidth: "100px"
-                       }}>
-                         <Avatar className="w-20 h-20 rounded-lg">
-                           <AvatarImage
-                             src={getProfilePictureUrl(executive) || undefined}
-                             alt={`${executive.firstName || ''} ${executive.lastName || ''}`.trim() || executive.email}
-                           />
-                           <AvatarFallback
-                             className="text-white font-bold text-base rounded-lg"
-                             style={{ backgroundColor: "#0051a2" }}
-                           >
-                             {getInitials(executive.firstName, executive.lastName, executive.email)}
-                           </AvatarFallback>
-                         </Avatar>
-                         <div style={{
-                           display: "flex",
-                           flexDirection: "column",
-                           alignItems: "center",
-                           gap: 2
-                         }}>
-                           <span style={{
-                             fontSize: "11px",
-                             color: "#ffffff",
-                             fontWeight: "600",
-                             textAlign: "center",
-                             lineHeight: "1.2"
-                           }}>
-                             {fullName.length > 14 ? fullName.substring(0, 14) + '...' : fullName}
-                           </span>
-                           <span style={{
-                             fontSize: "9px",
-                             color: "#ffffff",
-                             fontWeight: "500",
-                             opacity: 0.9
-                           }}>
-                             {executive.role || "Executive"}
-                           </span>
-                         </div>
-                       </div>
-                     );
-                   })}
-                 </div>
-               </div>
-             ),
-           },
-           style: {
-             border: "2px solid #0070f3",
-             background: "transparent",
-             minWidth: 320,
-             minHeight: 280,
-             display: "flex",
-             alignItems: "center",
-             justifyContent: "center",
-             fontWeight: "bold",
-             boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-             borderRadius: 12,
-             cursor: "pointer",
-             transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
-             padding: 0,
-           },
-         };
+        // 5. Connect executives without managers directly to Executive Department Box
+        const executivesWithoutManager = executiveRoleEmployees.filter(executive => {
+          const hasManager = relations.some(rel => rel.toId === executive.id && rel.type === "MANAGER");
+          return !hasManager;
+        });
+
+        if (executiveDepartmentEmployees.length > 0) {
+          executivesWithoutManager.forEach((executive) => {
+            edges.push({
+              id: `executive-box-to-executive-${executive.id}`,
+              source: 'executive-department-box',
+              target: executive.id,
+              animated: true,
+              style: {
+                stroke: "#0070f3",
+                strokeWidth: 2,
+                strokeDasharray: "3,3",
+              },
+            });
+          });
+        }
+
+        // 6. Create general hierarchy edges based on relations (fallback for any missed connections)
+        relations.forEach((rel) => {
+          const sourceEmployee = employees.find(emp => emp.id === rel.fromId);
+          const targetEmployee = employees.find(emp => emp.id === rel.toId);
+
+          if (!sourceEmployee || !targetEmployee) return;
+
+          // Skip if either employee is in Executive department (handled by Executive box)
+          if (sourceEmployee.department === 'Executive' || targetEmployee.department === 'Executive') return;
+
+          // Skip if this edge already exists
+          const edgeExists = edges.some(edge =>
+            edge.source === rel.fromId && edge.target === rel.toId
+          );
+
+          if (edgeExists) return;
+
+          // Create edge based on relation type
+          let stroke, strokeDasharray;
+
+          if (rel.type === "MANAGER") {
+            stroke = "#f59e42"; // Manager color
+            strokeDasharray = undefined; // Solid line
+          } else if (rel.type === "EXECUTIVE") {
+            stroke = getDepartmentColor(targetEmployee.department).background;
+            strokeDasharray = "3,3"; // Dashed line
+          } else {
+            stroke = getDepartmentColor(targetEmployee.department).background;
+            strokeDasharray = "2,4"; // Dotted line
+          }
+
+          edges.push({
+            id: `relation-${rel.id}`,
+            source: rel.fromId,
+            target: rel.toId,
+            animated: true,
+            style: {
+              stroke,
+              strokeWidth: 2,
+              strokeDasharray,
+            },
+          });
+        });
+
+        // Create Executive department box node with individual executive nodes inside
+        const executiveBoxNode: Node = {
+          id: 'executive-department-box',
+          position: { x: 0, y: 0 }, // Will be calculated by dagre
+          data: {
+            label: (
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 16,
+                padding: "20px 16px",
+                textAlign: "center",
+                width: "100%",
+                height: "100%"
+              }}>
+                <div style={{
+                  fontWeight: "bold",
+                  fontSize: "18px",
+                  color: "#0070f3",
+                  marginBottom: "12px"
+                }}>
+                  Executive Department
+                </div>
+                <div style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                  gap: "16px",
+                  width: "100%",
+                  maxHeight: "160px",
+                  overflowY: "auto"
+                }}>
+                  {executiveDepartmentEmployees.map((executive: Employee) => {
+                    const fullName = executive.firstName && executive.lastName
+                      ? `${executive.firstName} ${executive.lastName}`
+                      : executive.email;
+
+                    return (
+                      <div key={executive.id} style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 6,
+                        padding: "8px",
+                        borderRadius: "8px",
+                        backgroundColor: "#0070f3",
+                        minWidth: "100px"
+                      }}>
+                        <Avatar className="w-20 h-20 rounded-lg">
+                          <AvatarImage
+                            src={getProfilePictureUrl(executive) || undefined}
+                            alt={`${executive.firstName || ''} ${executive.lastName || ''}`.trim() || executive.email}
+                          />
+                          <AvatarFallback
+                            className="text-white font-bold text-base rounded-lg"
+                            style={{ backgroundColor: "#0051a2" }}
+                          >
+                            {getInitials(executive.firstName, executive.lastName, executive.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: 2
+                        }}>
+                          <span style={{
+                            fontSize: "11px",
+                            color: "#ffffff",
+                            fontWeight: "600",
+                            textAlign: "center",
+                            lineHeight: "1.2"
+                          }}>
+                            {fullName.length > 14 ? fullName.substring(0, 14) + '...' : fullName}
+                          </span>
+                          <span style={{
+                            fontSize: "9px",
+                            color: "#ffffff",
+                            fontWeight: "500",
+                            opacity: 0.9
+                          }}>
+                            {executive.role || "Executive"}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ),
+          },
+          style: {
+            border: "2px solid #0070f3",
+            background: "transparent",
+            minWidth: 320,
+            minHeight: 280,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: "bold",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+            borderRadius: 12,
+            cursor: "pointer",
+            transition: "border 0.2s, background 0.2s, box-shadow 0.2s",
+            padding: 0,
+          },
+        };
 
         // Add executive box node to nodes array
         const allNodes = [...nodes, executiveBoxNode];
@@ -663,81 +669,81 @@ export default function EmployeeHierarchyFlow() {
     }
   }, [nodes.length, edges.length, reactFlowInstance]);
 
-     // Update node styles when highlighting changes
-   useEffect(() => {
-     if (nodes.length > 0) {
-       setNodes(prevNodes => 
-         prevNodes.map(node => {
-           // Skip executive department box node
-           if (node.id === 'executive-department-box') {
-             return node;
-           }
-           
-           const role = node.data?.label?.props?.children?.[1]?.props?.children?.[1]?.props?.children || "EMPLOYEE";
-           let border, background, boxShadow;
-           
-           // Get department color for the node
-           const department = node.data?.department || null;
-           const deptColor = getDepartmentColor(department);
-           
-           // Use department colors for all nodes
-           border = `2px solid ${deptColor.border}`;
-           background = deptColor.background;
-           
-           // Special styling for admin role
-           if (role === "ADMIN") {
-             border = "3px solid #0070f3";
-             background = "#0070f3";
-           }
+  // Update node styles when highlighting changes
+  useEffect(() => {
+    if (nodes.length > 0) {
+      setNodes(prevNodes =>
+        prevNodes.map(node => {
+          // Skip executive department box node
+          if (node.id === 'executive-department-box') {
+            return node;
+          }
 
-           // Apply highlighting
-           if (highlightedNode === node.id) {
-             border = "4px solid #ff6b6b";
-             boxShadow = "0 0 0 4px #ff6b6b, 0 8px 25px rgba(255, 107, 107, 0.3)";
-             // Darken background for highlighted nodes
-             if (role === "ADMIN") {
-               background = "#0051a2";
-             } else {
-               // Darken department color
-               background = deptColor.iconBg;
-             }
-           } else if (selectedNode === node.id) {
-             border = "3px solid #ffffff";
-             boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-             // Darken background for selected nodes
-             if (role === "ADMIN") {
-               background = "#0051a2";
-             } else {
-               // Darken department color
-               background = deptColor.iconBg;
-             }
-           } else if (hoveredNode === node.id) {
-             border = "3px solid #ffffff";
-             boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-             // Darken background for hovered nodes
-             if (role === "ADMIN") {
-               background = "#0051a2";
-             } else {
-               // Darken department color
-               background = deptColor.iconBg;
-             }
-           } else {
-             boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
-           }
+          const role = node.data?.label?.props?.children?.[1]?.props?.children?.[1]?.props?.children || "EMPLOYEE";
+          let border, background, boxShadow;
 
-           return {
-             ...node,
-             style: {
-               ...node.style,
-               border,
-               background,
-               boxShadow,
-             },
-           };
-         })
-       );
-     }
-   }, [highlightedNode, selectedNode, nodes.length]);
+          // Get department color for the node
+          const department = node.data?.department || null;
+          const deptColor = getDepartmentColor(department);
+
+          // Use department colors for all nodes
+          border = `2px solid ${deptColor.border}`;
+          background = deptColor.background;
+
+          // Special styling for admin role
+          if (role === "ADMIN") {
+            border = "3px solid #0070f3";
+            background = "#0070f3";
+          }
+
+          // Apply highlighting
+          if (highlightedNode === node.id) {
+            border = "4px solid #ff6b6b";
+            boxShadow = "0 0 0 4px #ff6b6b, 0 8px 25px rgba(255, 107, 107, 0.3)";
+            // Darken background for highlighted nodes
+            if (role === "ADMIN") {
+              background = "#0051a2";
+            } else {
+              // Darken department color
+              background = deptColor.iconBg;
+            }
+          } else if (selectedNode === node.id) {
+            border = "3px solid #ffffff";
+            boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            // Darken background for selected nodes
+            if (role === "ADMIN") {
+              background = "#0051a2";
+            } else {
+              // Darken department color
+              background = deptColor.iconBg;
+            }
+          } else if (hoveredNode === node.id) {
+            border = "3px solid #ffffff";
+            boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            // Darken background for hovered nodes
+            if (role === "ADMIN") {
+              background = "#0051a2";
+            } else {
+              // Darken department color
+              background = deptColor.iconBg;
+            }
+          } else {
+            boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+          }
+
+          return {
+            ...node,
+            style: {
+              ...node.style,
+              border,
+              background,
+              boxShadow,
+            },
+          };
+        })
+      );
+    }
+  }, [highlightedNode, selectedNode, nodes.length]);
 
   // Tooltip logic
   const handleNodeMouseEnter = (event: React.MouseEvent, node: Node) => {
@@ -776,7 +782,7 @@ export default function EmployeeHierarchyFlow() {
       .map(node => node.id);
 
     setSearchResults(results);
-    
+
     if (results.length > 0) {
       setHighlightedNode(results[0]);
       // Zoom to the first result
@@ -957,11 +963,10 @@ export default function EmployeeHierarchyFlow() {
                           });
                         }
                       }}
-                      className={`h-6 px-2 text-xs ${
-                        highlightedNode === resultId 
-                          ? 'bg-blue-100 text-blue-700' 
+                      className={`h-6 px-2 text-xs ${highlightedNode === resultId
+                          ? 'bg-blue-100 text-blue-700'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
+                        }`}
                     >
                       {index + 1}
                     </Button>
@@ -974,51 +979,59 @@ export default function EmployeeHierarchyFlow() {
             </div>
           </div>
         )}
-      {/* Success Message */}
-      {assignmentSuccess && (
-        <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            <div>
-              <p className="font-medium">Forms Assigned Successfully!</p>
-              <p className="text-sm">Managers and employees can now access their forms in the Assignments section.</p>
+        {/* Success Message */}
+        {assignmentSuccess && (
+          <div className="absolute top-16 right-4 z-10 bg-green-100 border border-green-400 text-green-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-4 w-4" />
+              <div>
+                <p className="font-medium">Forms Assigned Successfully!</p>
+                <p className="text-sm">Managers and employees can now access their forms in the Assignments section.</p>
+              </div>
             </div>
           </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
+            <div className="flex items-center gap-2">
+              <XCircle className="h-4 w-4" />
+              <div>
+                <p className="font-medium">Assignment Failed</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Department Legend */}
+        <div className="absolute bottom-4 right-4 z-10 bg-white rounded-lg shadow-lg border border-gray-200 max-w-xs">
+          <Accordion type="single" collapsible defaultValue="departments">
+            <AccordionItem value="departments" className="border-0">
+              <AccordionTrigger className="px-4 py-2 cursor-pointer text-sm font-semibold text-gray-800 hover:no-underline">
+                Departments
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-3">
+                <div className="space-y-2">
+                  {Object.entries(departmentColors).map(([dept, colors]) => (
+                    <div key={dept} className="flex items-center gap-2">
+                      <div
+                        className="w-4 h-4 rounded-full border-2"
+                        style={{
+                          backgroundColor: colors.background,
+                          borderColor: colors.border
+                        }}
+                      />
+                      <span className="text-xs text-gray-600">{dept}</span>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
-      )}
-
-               {/* Error Message */}
-         {error && (
-           <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-md shadow-lg max-w-sm">
-             <div className="flex items-center gap-2">
-               <XCircle className="h-4 w-4" />
-               <div>
-                 <p className="font-medium">Assignment Failed</p>
-                 <p className="text-sm">{error}</p>
-               </div>
-             </div>
-           </div>
-         )}
-
-         {/* Department Legend */}
-         <div className="absolute bottom-4 right-4 z-10 bg-white rounded-lg shadow-lg border border-gray-200 p-4 max-w-xs">
-           <h3 className="font-semibold text-sm mb-3 text-gray-800">Departments</h3>
-           <div className="space-y-2">
-             {Object.entries(departmentColors).map(([dept, colors]) => (
-               <div key={dept} className="flex items-center gap-2">
-                 <div 
-                   className="w-4 h-4 rounded-full border-2"
-                   style={{ 
-                     backgroundColor: colors.background,
-                     borderColor: colors.border
-                   }}
-                 />
-                 <span className="text-xs text-gray-600">{dept}</span>
-               </div>
-             ))}
-           </div>
-         </div>
-       </ReactFlow>
-       </div >
-     );
-   }
+      </ReactFlow>
+    </div >
+  );
+}
