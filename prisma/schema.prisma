@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Form {
+  id          String       @id @default(uuid())
+  title       String
+  description String?
+  questions   Json
+  createdAt   DateTime     @default(now())
+  createdBy   String
+  assignments Assignment[]
+}
+
+model Assignment {
+  id              String     @id @default(uuid())
+  formId          String
+  employeeId      String
+  assignedAt      DateTime   @default(now())
+  employeeEmail   String
+  evaluationTarget Json?     // Stores context about who is being evaluated
+  form            Form       @relation(fields: [formId], references: [id])
+  employee        Employee   @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  responses       Response[]
+  summary         Summary?
+}
+
+model Response {
+  id           String     @id @default(uuid())
+  assignmentId String
+  responderId  String
+  answers      Json
+  createdAt    DateTime   @default(now())
+  isPeer       Boolean
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+}
+
+model Summary {
+  id           String     @id @default(uuid())
+  assignmentId String     @unique
+  content      String
+  approved     Boolean
+  createdAt    DateTime   @default(now())
+  approvedAt   DateTime?
+  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+}
+
+model Employee {
+  id                String             @id
+  email             String             @unique
+  createdAt         DateTime           @default(now())
+  department        String?
+  firstName         String?
+  isLead            Boolean            @default(false)
+  isManager         Boolean            @default(false)
+  lastName          String?
+  role              String?
+  phoneNumber       String?
+  profilePictureUrl String?
+  relationsFrom     EmployeeRelation[] @relation("FromEmployee")
+  relationsTo       EmployeeRelation[] @relation("ToEmployee")
+  assignments       Assignment[]
+}
+
+model EmployeeRelation {
+  id     String       @id @default(uuid())
+  fromId String
+  toId   String
+  type   RelationType
+  from   Employee     @relation("FromEmployee", fields: [fromId], references: [id], onDelete: Cascade)
+  to     Employee     @relation("ToEmployee", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId, type])
+}
+
+model OnboardingRequest {
+  id                String           @id @default(uuid())
+  userId            String           @unique
+  email             String
+  firstName         String
+  lastName          String
+  department        String
+  role              String
+  phoneNumber       String?
+  isManager         Boolean          @default(false)
+  isLead            Boolean          @default(false)
+  managerEmail      String?
+  status            OnboardingStatus @default(PENDING)
+  createdAt         DateTime         @default(now())
+  approvedAt        DateTime?
+  approvedBy        String?
+  profilePictureUrl String?
+}
+
+enum RelationType {
+  MANAGER
+  LEAD
+  COLLEAGUE
+}
+
+enum OnboardingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
