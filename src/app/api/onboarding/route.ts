@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prsima";
 import { isCompanyEmail } from "@/lib/emailValidation";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { updateClerkProfilePicture } from "@/lib/clerkUtils";
 
 export async function POST(request: Request) {
   const user = await currentUser();
@@ -49,6 +50,11 @@ export async function POST(request: Request) {
         
         // Store the URL path
         profilePictureUrl = `/uploads/${fileName}`;
+        
+        // Automatically update Clerk profile picture
+        const fullImageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}${profilePictureUrl}`;
+        await updateClerkProfilePicture(user.id, fullImageUrl);
+        
       } catch (error) {
         console.error("Failed to save profile picture:", error);
         // Continue without profile picture

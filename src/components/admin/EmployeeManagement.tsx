@@ -361,7 +361,7 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
                       <TableCell className="px-2">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage src={request.profilePictureUrl || undefined} />
+                            <AvatarImage src={request.profilePictureUrl || ""} />
                             <AvatarFallback className="text-xs">
                               {getInitials(request.firstName, request.lastName, request.email)}
                             </AvatarFallback>
