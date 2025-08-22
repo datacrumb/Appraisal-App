@@ -92,7 +92,7 @@ const PayoutCard = ({ userProfile }: PayoutCardProps) => {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-gray-900 truncate">{payout.month}</p>
-                  <p className="text-xs text-gray-500">Base: ${payout.baseSalary.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">Base: Rs {payout.baseSalary.toLocaleString()}</p>
                 </div>
               </div>
               <div className="text-right ml-2">

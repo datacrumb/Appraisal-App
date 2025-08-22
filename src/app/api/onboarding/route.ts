@@ -51,9 +51,7 @@ export async function POST(request: Request) {
         // Store the URL path
         profilePictureUrl = `/uploads/${fileName}`;
         
-        // Automatically update Clerk profile picture
-        const fullImageUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}${profilePictureUrl}`;
-        await updateClerkProfilePicture(user.id, fullImageUrl);
+        await updateClerkProfilePicture(user.id, profilePicture);
         
       } catch (error) {
         console.error("Failed to save profile picture:", error);

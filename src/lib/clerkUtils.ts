@@ -1,10 +1,9 @@
 import { clerkClient } from "@clerk/nextjs/server";
 
-export async function updateClerkProfilePicture(userId: string, imageUrl: string) {
+export async function updateClerkProfilePicture(userId: string, file: File) {
   try {
-    // Fetch the image and convert to Blob
-    const response = await fetch(imageUrl);
-    const blob = await response.blob();
+    // Convert File to Blob directly
+    const blob = new Blob([await file.arrayBuffer()], { type: file.type });
     
     // Update the user's profile image in Clerk
     const client = await clerkClient();

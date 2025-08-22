@@ -3,10 +3,30 @@ import { redirect } from "next/navigation";
 import { OnboardingForm } from "@/components/auth/OnboardingForm";
 import { isCompanyEmail } from "@/lib/emailValidation";
 import { SignOutButton } from "@clerk/nextjs";
+import { prisma } from "@/lib/prsima";
+
+async function checkApproval(userId: string) {
+  try {
+    // Check directly in database instead of calling API
+    const onboardingRequest = await prisma.onboardingRequest.findUnique({
+      where: { userId: userId },
+    });
+    
+    return onboardingRequest?.status === 'APPROVED';
+  } catch (error) {
+    console.error('Error checking approval:', error);
+    return false;
+  }
+}
 
 export default async function OnboardingPage() {
   const user = await currentUser();
   if (!user) redirect("/sign-in");
+
+  const approved = await checkApproval(user.id);
+  if (approved) {
+    redirect("/");
+  }
 
   // Get user email
   const userEmail = user.emailAddresses?.[0]?.emailAddress;
@@ -37,9 +57,6 @@ export default async function OnboardingPage() {
       </div>
     );
   }
-
-  // Note: Approval check is handled by middleware
-  // This page is only for users who need to submit onboarding form
 
   return (
     <OnboardingForm />
