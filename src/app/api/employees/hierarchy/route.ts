@@ -35,8 +35,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "No admin found in the system" }, { status: 404 });
     }
 
+    // Define hidden user IDs
+    const hiddenUserIds = [
+      'user_31dv7aHKCuIdIcmJNV9apfGbhhb',  // Add the user ID you want to hide
+      // Add more user IDs as needed
+      
+    ];
+
     // Fetch all employees with their relations
     const employees = await prisma.employee.findMany({
+      where: {
+        id: {
+          notIn: hiddenUserIds  // Exclude these users
+        }
+      },
       include: {
         relationsFrom: {
           include: {
