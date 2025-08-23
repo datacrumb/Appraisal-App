@@ -15,9 +15,23 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Users, CheckCircle, Search, Save, X, Trash2 } from "lucide-react";
+import {
+  Clock,
+  Users,
+  CheckCircle,
+  Search,
+  Save,
+  X,
+  Trash2,
+} from "lucide-react";
 import { TableSkeleton } from "../layout/TableSkeleton";
 
 interface OnboardingRequest {
@@ -55,25 +69,30 @@ interface ApprovalsListProps {
   allEmployees: Employee[];
 }
 
-export function EmployeeManagement({ initialRequests, allEmployees: initialAllEmployees }: ApprovalsListProps) {
+export function EmployeeManagement({
+  initialRequests,
+  allEmployees: initialAllEmployees,
+}: ApprovalsListProps) {
   const [requests, setRequests] = useState(initialRequests);
   const [allEmployees, setAllEmployees] = useState(initialAllEmployees);
   const [loading, setLoading] = useState<string | null>(null);
   const [rejectLoading, setRejectLoading] = useState<string | null>(null);
   const [saveLoading, setSaveLoading] = useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
-  
+
   // Search state for employees
   const [employeeSearch, setEmployeeSearch] = useState("");
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [currentEmployeePage, setCurrentEmployeePage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
 
   // Editable employee state
   const [editingEmployee, setEditingEmployee] = useState<string | null>(null);
-  const [editedEmployees, setEditedEmployees] = useState<Record<string, Partial<Employee>>>({});
+  const [editedEmployees, setEditedEmployees] = useState<
+    Record<string, Partial<Employee>>
+  >({});
 
   const handleApprove = async (requestId: string) => {
     setLoading(requestId);
@@ -92,7 +111,9 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
       setRequests((prev) => prev.filter((req) => req.id !== requestId));
       toast.success("Request approved successfully!");
     } catch (error: any) {
-      toast.error(error.message || "An error occurred while approving the request.");
+      toast.error(
+        error.message || "An error occurred while approving the request."
+      );
     } finally {
       setLoading(null);
     }
@@ -115,7 +136,9 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
       setRequests((prev) => prev.filter((req) => req.id !== requestId));
       toast.success("Request rejected successfully!");
     } catch (error: any) {
-      toast.error(error.message || "An error occurred while rejecting the request.");
+      toast.error(
+        error.message || "An error occurred while rejecting the request."
+      );
     } finally {
       setRejectLoading(null);
     }
@@ -123,16 +146,16 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
 
   const handleEditEmployee = (employeeId: string) => {
     setEditingEmployee(employeeId);
-    const employee = allEmployees.find(emp => emp.id === employeeId);
+    const employee = allEmployees.find((emp) => emp.id === employeeId);
     if (employee) {
-      setEditedEmployees(prev => ({
+      setEditedEmployees((prev) => ({
         ...prev,
         [employeeId]: {
           department: employee.department || "",
           role: employee.role || "",
           isManager: employee.isManager,
           isLead: employee.isLead,
-        }
+        },
       }));
     }
   };
@@ -155,13 +178,15 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
 
       toast.success("Employee updated successfully!");
       setEditingEmployee(null);
-      setEditedEmployees(prev => {
+      setEditedEmployees((prev) => {
         const newState = { ...prev };
         delete newState[employeeId];
         return newState;
       });
     } catch (error: any) {
-      toast.error(error.message || "An error occurred while updating employee.");
+      toast.error(
+        error.message || "An error occurred while updating employee."
+      );
     } finally {
       setSaveLoading(null);
     }
@@ -169,7 +194,7 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
 
   const handleCancelEdit = (employeeId: string) => {
     setEditingEmployee(null);
-    setEditedEmployees(prev => {
+    setEditedEmployees((prev) => {
       const newState = { ...prev };
       delete newState[employeeId];
       return newState;
@@ -177,8 +202,11 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
   };
 
   const handleDeleteEmployee = async (employeeId: string) => {
-    const employee = allEmployees.find(emp => emp.id === employeeId);
-    const employeeName = employee ? `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.email : 'Employee';
+    const employee = allEmployees.find((emp) => emp.id === employeeId);
+    const employeeName = employee
+      ? `${employee.firstName || ""} ${employee.lastName || ""}`.trim() ||
+        employee.email
+      : "Employee";
 
     setDeleteLoading(employeeId);
     try {
@@ -191,32 +219,32 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
       }
 
       const result = await response.json();
-      
+
       // Store employee data for undo functionality
       const deletedEmployeeData = result.employeeData;
-      
-      toast.success(
-        `${employeeName} deleted successfully!`,
-        {
-          description: result.deletedRelations > 0 
+
+      toast.success(`${employeeName} deleted successfully!`, {
+        description:
+          result.deletedRelations > 0
             ? `Removed ${result.deletedRelations} hierarchy relations. Form responses are preserved.`
             : "Form responses are preserved.",
-          action: {
-            label: "Undo",
-            onClick: () => handleUndoDelete(deletedEmployeeData),
-          },
-          duration: 10000, // 10 seconds to allow undo
-        }
-      );
-      
+        action: {
+          label: "Undo",
+          onClick: () => handleUndoDelete(deletedEmployeeData),
+        },
+        duration: 10000, // 10 seconds to allow undo
+      });
+
       setEditingEmployee(null);
-      setEditedEmployees(prev => {
+      setEditedEmployees((prev) => {
         const newState = { ...prev };
         delete newState[employeeId];
         return newState;
       });
     } catch (error: any) {
-      toast.error(error.message || "An error occurred while deleting employee.");
+      toast.error(
+        error.message || "An error occurred while deleting employee."
+      );
     } finally {
       setDeleteLoading(null);
     }
@@ -235,22 +263,30 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
       }
 
       const result = await response.json();
-      
+
       toast.success(
-        `${employeeData.firstName || ''} ${employeeData.lastName || ''}`.trim() || employeeData.email,
+        `${employeeData.firstName || ""} ${
+          employeeData.lastName || ""
+        }`.trim() || employeeData.email,
         {
           description: "Employee restored successfully with all relations.",
         }
       );
-      
+
       // Refresh the page to show the restored employee
       window.location.reload();
     } catch (error: any) {
-      toast.error(error.message || "An error occurred while restoring employee.");
+      toast.error(
+        error.message || "An error occurred while restoring employee."
+      );
     }
   };
 
-  const getInitials = (firstName: string | null, lastName: string | null, email: string) => {
+  const getInitials = (
+    firstName: string | null,
+    lastName: string | null,
+    email: string
+  ) => {
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
@@ -285,14 +321,16 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
   // Filter employees based on search
   const filteredEmployees = useMemo(() => {
     if (!employeeSearch.trim()) return allEmployees;
-    
+
     const searchTerm = employeeSearch.toLowerCase();
     return allEmployees.filter((employee) => {
-      const fullName = `${employee.firstName || ""} ${employee.lastName || ""}`.toLowerCase();
+      const fullName = `${employee.firstName || ""} ${
+        employee.lastName || ""
+      }`.toLowerCase();
       const email = employee.email.toLowerCase();
       const department = (employee.department || "").toLowerCase();
       const role = (employee.role || "").toLowerCase();
-      
+
       return (
         fullName.includes(searchTerm) ||
         email.includes(searchTerm) ||
@@ -312,7 +350,10 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
   const totalEmployeePages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startEmployeeIndex = (currentEmployeePage - 1) * itemsPerPage;
   const endEmployeeIndex = startEmployeeIndex + itemsPerPage;
-  const paginatedEmployees = filteredEmployees.slice(startEmployeeIndex, endEmployeeIndex);
+  const paginatedEmployees = filteredEmployees.slice(
+    startEmployeeIndex,
+    endEmployeeIndex
+  );
 
   // Reset pagination when search changes
   const handleEmployeeSearchChange = (value: string) => {
@@ -321,23 +362,307 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
   };
 
   return (
-    <Tabs defaultValue="pending" className="w-full">
+    <Tabs defaultValue="employees" className="w-full">
       <TabsList className="grid w-full grid-cols-2 rounded-full">
-        <TabsTrigger value="pending" className="flex items-center gap-2 rounded-full">
-          <Clock className="h-4 w-4" />
-          Pending Approvals ({requests.length})
-        </TabsTrigger>
-        <TabsTrigger value="employees" className="flex items-center gap-2 rounded-full">
+        <TabsTrigger
+          value="employees"
+          className="flex items-center gap-2 rounded-full"
+        >
           <Users className="h-4 w-4" />
           All Employees ({filteredEmployees.length})
         </TabsTrigger>
+        <TabsTrigger
+          value="pending"
+          className="flex items-center gap-2 rounded-full"
+        >
+          <Clock className="h-4 w-4" />
+          Pending Approvals ({requests.length})
+        </TabsTrigger>
       </TabsList>
+
+      <TabsContent value="employees" className="mt-6">
+        {/* Search for Employees */}
+        <div className="mb-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by name, email, department, or role..."
+              value={employeeSearch}
+              onChange={(e) => handleEmployeeSearchChange(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {saveLoading || deleteLoading ? (
+          <TableSkeleton />
+        ) : (
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="px-2">Employee</TableHead>
+                  <TableHead className="px-2">Department</TableHead>
+                  <TableHead className="px-2">Role</TableHead>
+                  <TableHead className="px-2">Position</TableHead>
+                  <TableHead className="px-2">Joined</TableHead>
+                  <TableHead className="px-2">Status</TableHead>
+                  <TableHead className="px-2 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedEmployees.map((employee) => {
+                  const isEditing = editingEmployee === employee.id;
+                  const editedData = editedEmployees[employee.id] || {};
+
+                  return (
+                    <TableRow key={employee.id}>
+                      <TableCell className="px-2">
+                        <div className="flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage
+                              src={employee.profilePictureUrl || undefined}
+                            />
+                            <AvatarFallback className="text-xs">
+                              {getInitials(
+                                employee.firstName,
+                                employee.lastName,
+                                employee.email
+                              )}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">
+                              {employee.firstName && employee.lastName
+                                ? `${employee.firstName} ${employee.lastName}`
+                                : employee.email}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {employee.email}
+                            </p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-2">
+                        {isEditing ? (
+                          <Input
+                            value={editedData.department || ""}
+                            onChange={(e) =>
+                              setEditedEmployees((prev) => ({
+                                ...prev,
+                                [employee.id]: {
+                                  ...prev[employee.id],
+                                  department: e.target.value,
+                                },
+                              }))
+                            }
+                            className="h-7 text-sm"
+                          />
+                        ) : (
+                          <span className="text-sm">
+                            {employee.department || "N/A"}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-2">
+                        {isEditing ? (
+                          <Input
+                            value={editedData.role || ""}
+                            onChange={(e) =>
+                              setEditedEmployees((prev) => ({
+                                ...prev,
+                                [employee.id]: {
+                                  ...prev[employee.id],
+                                  role: e.target.value,
+                                },
+                              }))
+                            }
+                            className="h-7 text-sm"
+                          />
+                        ) : (
+                          <span className="text-sm">
+                            {employee.role || "N/A"}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-2">
+                        {isEditing ? (
+                          <div className="flex gap-1">
+                            <Select
+                              value={
+                                editedData.isManager
+                                  ? "manager"
+                                  : editedData.isLead
+                                  ? "lead"
+                                  : "employee"
+                              }
+                              onValueChange={(value) =>
+                                setEditedEmployees((prev) => ({
+                                  ...prev,
+                                  [employee.id]: {
+                                    ...prev[employee.id],
+                                    isManager: value === "manager",
+                                    isLead: value === "lead",
+                                  },
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="employee">
+                                  Employee
+                                </SelectItem>
+                                <SelectItem value="lead">Lead</SelectItem>
+                                <SelectItem value="manager">Manager</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        ) : (
+                          <div className="flex gap-1">
+                            {employee.isManager && (
+                              <Badge variant="default" className="text-xs">
+                                Manager
+                              </Badge>
+                            )}
+                            {employee.isLead && (
+                              <Badge variant="secondary" className="text-xs">
+                                Lead
+                              </Badge>
+                            )}
+                            {!employee.isManager && !employee.isLead && (
+                              <Badge variant="outline" className="text-xs">
+                                Employee
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="px-2 text-sm">
+                        {new Date(employee.createdAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="px-2">
+                        <Badge
+                          variant="default"
+                          className="bg-green-200 text-green-700 text-xs"
+                        >
+                          Active
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="px-2 text-right">
+                        {saveLoading === employee.id ||
+                        deleteLoading === employee.id ? (
+                          <EmployeeActionSkeleton />
+                        ) : isEditing ? (
+                          <div className="flex gap-1 justify-end">
+                            <Button
+                              onClick={() => handleDeleteEmployee(employee.id)}
+                              disabled={
+                                saveLoading === employee.id ||
+                                deleteLoading === employee.id
+                              }
+                              size="sm"
+                              variant="destructive"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              onClick={() => handleSaveEmployee(employee.id)}
+                              disabled={
+                                saveLoading === employee.id ||
+                                deleteLoading === employee.id
+                              }
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              <Save className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              onClick={() => handleCancelEdit(employee.id)}
+                              disabled={
+                                saveLoading === employee.id ||
+                                deleteLoading === employee.id
+                              }
+                              size="sm"
+                              variant="outline"
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleEditEmployee(employee.id)}
+                            size="sm"
+                            variant="outline"
+                          >
+                            Edit
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+
+        {/* Pagination for Employees */}
+        {totalEmployeePages > 1 && (
+          <div className="flex items-center justify-between mt-4">
+            <p className="text-sm text-gray-500">
+              Showing {startEmployeeIndex + 1} to{" "}
+              {Math.min(endEmployeeIndex, filteredEmployees.length)} of{" "}
+              {filteredEmployees.length} employees
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentEmployeePage(currentEmployeePage - 1)}
+                disabled={currentEmployeePage === 1}
+              >
+                Previous
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from(
+                  { length: totalEmployeePages },
+                  (_, i) => i + 1
+                ).map((page) => (
+                  <Button
+                    key={page}
+                    variant={
+                      currentEmployeePage === page ? "default" : "outline"
+                    }
+                    size="sm"
+                    onClick={() => setCurrentEmployeePage(page)}
+                    className="w-8 h-8 p-0"
+                  >
+                    {page}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentEmployeePage(currentEmployeePage + 1)}
+                disabled={currentEmployeePage === totalEmployeePages}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+      </TabsContent>
 
       <TabsContent value="pending" className="mt-6">
         {requests.length === 0 ? (
           <div className="text-center py-8">
             <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <p className="text-lg font-semibold text-gray-900">No pending approvals</p>
+            <p className="text-lg font-semibold text-gray-900">
+              No pending approvals
+            </p>
             <p className="text-gray-500">All requests have been processed.</p>
           </div>
         ) : (
@@ -361,42 +686,70 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
                       <TableCell className="px-2">
                         <div className="flex items-center gap-2">
                           <Avatar className="h-6 w-6">
-                            <AvatarImage src={request.profilePictureUrl || ""} />
+                            <AvatarImage
+                              src={request.profilePictureUrl || ""}
+                            />
                             <AvatarFallback className="text-xs">
-                              {getInitials(request.firstName, request.lastName, request.email)}
+                              {getInitials(
+                                request.firstName,
+                                request.lastName,
+                                request.email
+                              )}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="font-medium text-sm">
                               {request.firstName} {request.lastName}
                             </p>
-                            <p className="text-xs text-gray-500">{request.email}</p>
+                            <p className="text-xs text-gray-500">
+                              {request.email}
+                            </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 text-sm">{request.department}</TableCell>
+                      <TableCell className="px-2 text-sm">
+                        {request.department}
+                      </TableCell>
                       <TableCell className="px-2">
                         <div className="flex gap-1">
-                          <Badge variant="secondary" className="text-xs">{request.role}</Badge>
-                          {request.isManager && <Badge variant="outline" className="text-xs">Manager</Badge>}
-                          {request.isLead && <Badge variant="outline" className="text-xs">Lead</Badge>}
+                          <Badge variant="secondary" className="text-xs">
+                            {request.role}
+                          </Badge>
+                          {request.isManager && (
+                            <Badge variant="outline" className="text-xs">
+                              Manager
+                            </Badge>
+                          )}
+                          {request.isLead && (
+                            <Badge variant="outline" className="text-xs">
+                              Lead
+                            </Badge>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell className="px-2 text-sm">{request.managerEmail || 'None'}</TableCell>
+                      <TableCell className="px-2 text-sm">
+                        {request.managerEmail || "None"}
+                      </TableCell>
                       <TableCell className="px-2">
-                        <Badge variant="destructive" className="text-xs">Pending</Badge>
+                        <Badge variant="destructive" className="text-xs">
+                          Pending
+                        </Badge>
                       </TableCell>
                       <TableCell className="px-2 text-sm">
                         {new Date(request.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="px-2 text-right">
-                        {(loading === request.id || rejectLoading === request.id) ? (
+                        {loading === request.id ||
+                        rejectLoading === request.id ? (
                           <ActionButtonSkeleton />
                         ) : (
                           <div className="flex gap-1 justify-end">
                             <Button
                               onClick={() => handleApprove(request.id)}
-                              disabled={loading === request.id || rejectLoading === request.id}
+                              disabled={
+                                loading === request.id ||
+                                rejectLoading === request.id
+                              }
                               size="sm"
                               className="bg-green-600 hover:bg-green-700 text-white"
                             >
@@ -404,7 +757,10 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
                             </Button>
                             <Button
                               onClick={() => handleReject(request.id)}
-                              disabled={loading === request.id || rejectLoading === request.id}
+                              disabled={
+                                loading === request.id ||
+                                rejectLoading === request.id
+                              }
                               size="sm"
                               variant="destructive"
                             >
@@ -418,12 +774,14 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
                 </TableBody>
               </Table>
             </div>
-            
+
             {/* Pagination for Requests */}
             {totalRequestPages > 1 && (
               <div className="flex items-center justify-between mt-4">
                 <p className="text-sm text-gray-500">
-                  Showing {startRequestIndex + 1} to {Math.min(endRequestIndex, requests.length)} of {requests.length} requests
+                  Showing {startRequestIndex + 1} to{" "}
+                  {Math.min(endRequestIndex, requests.length)} of{" "}
+                  {requests.length} requests
                 </p>
                 <div className="flex gap-2">
                   <Button
@@ -435,7 +793,10 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
                     Previous
                   </Button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: totalRequestPages }, (_, i) => i + 1).map((page) => (
+                    {Array.from(
+                      { length: totalRequestPages },
+                      (_, i) => i + 1
+                    ).map((page) => (
                       <Button
                         key={page}
                         variant={currentPage === page ? "default" : "outline"}
@@ -459,219 +820,6 @@ export function EmployeeManagement({ initialRequests, allEmployees: initialAllEm
               </div>
             )}
           </>
-        )}
-      </TabsContent>
-
-      <TabsContent value="employees" className="mt-6">
-        {/* Search for Employees */}
-        <div className="mb-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search by name, email, department, or role..."
-              value={employeeSearch}
-              onChange={(e) => handleEmployeeSearchChange(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        {(saveLoading || deleteLoading) ? (
-          <TableSkeleton />
-        ) : (
-          <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="px-2">Employee</TableHead>
-                <TableHead className="px-2">Department</TableHead>
-                <TableHead className="px-2">Role</TableHead>
-                <TableHead className="px-2">Position</TableHead>
-                <TableHead className="px-2">Joined</TableHead>
-                <TableHead className="px-2">Status</TableHead>
-                <TableHead className="px-2 text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedEmployees.map((employee) => {
-                const isEditing = editingEmployee === employee.id;
-                const editedData = editedEmployees[employee.id] || {};
-                
-                return (
-                  <TableRow key={employee.id}>
-                    <TableCell className="px-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={employee.profilePictureUrl || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {getInitials(employee.firstName, employee.lastName, employee.email)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {employee.firstName && employee.lastName 
-                              ? `${employee.firstName} ${employee.lastName}`
-                              : employee.email
-                            }
-                          </p>
-                          <p className="text-xs text-gray-500">{employee.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-2">
-                      {isEditing ? (
-                        <Input
-                          value={editedData.department || ""}
-                          onChange={(e) => setEditedEmployees(prev => ({
-                            ...prev,
-                            [employee.id]: { ...prev[employee.id], department: e.target.value }
-                          }))}
-                          className="h-7 text-sm"
-                        />
-                      ) : (
-                        <span className="text-sm">{employee.department || 'N/A'}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-2">
-                      {isEditing ? (
-                        <Input
-                          value={editedData.role || ""}
-                          onChange={(e) => setEditedEmployees(prev => ({
-                            ...prev,
-                            [employee.id]: { ...prev[employee.id], role: e.target.value }
-                          }))}
-                          className="h-7 text-sm"
-                        />
-                      ) : (
-                        <span className="text-sm">{employee.role || 'N/A'}</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-2">
-                      {isEditing ? (
-                        <div className="flex gap-1">
-                          <Select
-                            value={editedData.isManager ? "manager" : editedData.isLead ? "lead" : "employee"}
-                            onValueChange={(value) => setEditedEmployees(prev => ({
-                              ...prev,
-                              [employee.id]: {
-                                ...prev[employee.id],
-                                isManager: value === "manager",
-                                isLead: value === "lead"
-                              }
-                            }))}
-                          >
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="employee">Employee</SelectItem>
-                              <SelectItem value="lead">Lead</SelectItem>
-                              <SelectItem value="manager">Manager</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ) : (
-                        <div className="flex gap-1">
-                          {employee.isManager && <Badge variant="default" className="text-xs">Manager</Badge>}
-                          {employee.isLead && <Badge variant="secondary" className="text-xs">Lead</Badge>}
-                          {!employee.isManager && !employee.isLead && (
-                            <Badge variant="outline" className="text-xs">Employee</Badge>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-2 text-sm">
-                      {new Date(employee.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="px-2">
-                      <Badge variant="default" className="bg-green-200 text-green-700 text-xs">Active</Badge>
-                    </TableCell>
-                                         <TableCell className="px-2 text-right">
-                       {(saveLoading === employee.id || deleteLoading === employee.id) ? (
-                         <EmployeeActionSkeleton />
-                       ) : isEditing ? (
-                         <div className="flex gap-1 justify-end">
-                           <Button
-                             onClick={() => handleDeleteEmployee(employee.id)}
-                             disabled={saveLoading === employee.id || deleteLoading === employee.id}
-                             size="sm"
-                             variant="destructive"
-                           >
-                             <Trash2 className="h-3 w-3" />
-                           </Button>
-                           <Button
-                             onClick={() => handleSaveEmployee(employee.id)}
-                             disabled={saveLoading === employee.id || deleteLoading === employee.id}
-                             size="sm"
-                             className="bg-green-600 hover:bg-green-700 text-white"
-                           >
-                             <Save className="h-3 w-3" />
-                           </Button>
-                           <Button
-                             onClick={() => handleCancelEdit(employee.id)}
-                             disabled={saveLoading === employee.id || deleteLoading === employee.id}
-                             size="sm"
-                             variant="outline"
-                           >
-                             <X className="h-3 w-3" />
-                           </Button>
-                         </div>
-                       ) : (
-                         <Button
-                           onClick={() => handleEditEmployee(employee.id)}
-                           size="sm"
-                           variant="outline"
-                         >
-                           Edit
-                         </Button>
-                       )}
-                     </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
-        )}
-
-        {/* Pagination for Employees */}
-        {totalEmployeePages > 1 && (
-          <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-gray-500">
-              Showing {startEmployeeIndex + 1} to {Math.min(endEmployeeIndex, filteredEmployees.length)} of {filteredEmployees.length} employees
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentEmployeePage(currentEmployeePage - 1)}
-                disabled={currentEmployeePage === 1}
-              >
-                Previous
-              </Button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalEmployeePages }, (_, i) => i + 1).map((page) => (
-                  <Button
-                    key={page}
-                    variant={currentEmployeePage === page ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCurrentEmployeePage(page)}
-                    className="w-8 h-8 p-0"
-                  >
-                    {page}
-                  </Button>
-                ))}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentEmployeePage(currentEmployeePage + 1)}
-                disabled={currentEmployeePage === totalEmployeePages}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
         )}
       </TabsContent>
     </Tabs>
