@@ -58,7 +58,7 @@ const HoursWeeksCard = () => {
         <div className="flex-1">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-cyan-700 rounded-xl flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#00838F] rounded-xl flex items-center justify-center">
                 <BsHourglassSplit className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
               </div>
               <div className="flex items-baseline gap-1 sm:gap-2">
@@ -117,7 +117,7 @@ const HoursWeeksCard = () => {
         </div>
 
         {/* Right Panel: Team Distribution */}
-        <div className="w-full lg:w-44 h-48 sm:h-60 bg-cyan-700 p-2 rounded-4xl relative overflow-hidden">
+        <div className="w-full lg:w-44 h-48 sm:h-60 bg-[#00838F] p-2 rounded-4xl relative overflow-hidden">
           {/* Animated Background Slider */}
           <div
             className={`absolute top-2 left-2 right-2 h-24 sm:h-28 bg-white rounded-4xl transition-transform duration-500 ease-in-out ${activeTab === 'onsite' ? 'translate-y-0' : 'translate-y-24 sm:translate-y-28'

@@ -30,7 +30,7 @@ const TotalEmployeeCard = () => {
 
   // Color mapping for different categories - matching the image colors
   const getCategoryColor = (index: number) => {
-    const colors = ['#10b981', '#1e3a8a', '#d1d5db']; // Light green, teal/dark blue, light gray
+    const colors = ['#10b981', '#00838F', '#d1d5db']; // Light green, teal/dark blue, light gray
     return colors[index % colors.length];
   };
 

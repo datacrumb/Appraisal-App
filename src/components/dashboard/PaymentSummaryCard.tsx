@@ -1,9 +1,8 @@
 import React from "react";
-import { FileText, CreditCard } from "lucide-react";
 
 const PaymentSummaryCard = () => {
   return (
-    <div className="bg-cyan-700 text-white rounded-xl lg:max-w-sm w-full p-4 sm:p-6 shadow-sm">
+    <div className="bg-[#00838F] text-white rounded-xl lg:max-w-sm w-full p-4 sm:p-6 shadow-sm">
       {/* Payment Breakdown */}
       <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
         <div className="bg-[#10b981] rounded-full px-2 sm:px-3 py-4 sm:py-4 flex items-center justify-between">
