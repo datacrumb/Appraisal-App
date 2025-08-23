@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUser, SignInButton, SignedIn, UserButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { FileText, Users, Menu, ClipboardList, Home, FileCheck } from "lucide-react";
+import { FileText, Users, Menu, ClipboardList, Home, FileCheck, BookOpen } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -22,6 +22,7 @@ const adminNav = [
   { name: "My Assignments", href: "/assignments", icon: FileCheck },
   { name: "Responses", href: "/responses", icon: FileText },
   { name: "Employee Management", href: "/management", icon: FileText },
+  { name: "Course Management", href: "/courses", icon: BookOpen },
 ];
 
 const employeeNav = [
